@@ -1,0 +1,111 @@
+﻿using System.Collections.Immutable;
+using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
+using Microsoft.CodeAnalysis.Diagnostics;
+
+namespace TomsToolbox.Configuration.Documentation.Analyzer
+{
+    [DiagnosticAnalyzer(LanguageNames.CSharp)]
+    public class ConfigurationDocumentationAnalyzer : DiagnosticAnalyzer
+    {
+        public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics => ImmutableArray.Create([
+            Diagnostics.ConfigurationHasNoDescription,
+            Diagnostics.MissingSettingsSectionAttribute
+        ]);
+
+        public override void Initialize(AnalysisContext context)
+        {
+            context.ConfigureGeneratedCodeAnalysis(GeneratedCodeAnalysisFlags.None);
+            context.EnableConcurrentExecution();
+
+            context.RegisterSyntaxNodeAction(AnalyzeInvocation, SyntaxKind.InvocationExpression);
+        }
+
+        private void AnalyzeInvocation(SyntaxNodeAnalysisContext context)
+        {
+            var invocation = (InvocationExpressionSyntax)context.Node;
+
+            // Check if this is a member access expression (e.g., services.AddOptions<T>())
+            if (invocation.Expression is not MemberAccessExpressionSyntax memberAccess)
+                return;
+
+            // Check if the method name is "AddOptions"
+            if (memberAccess.Name is not GenericNameSyntax genericName ||
+                genericName.Identifier.Text != "AddOptions")
+                return;
+
+            // Get the symbol info for the invocation
+            var symbolInfo = context.SemanticModel.GetSymbolInfo(invocation, context.CancellationToken);
+            if (symbolInfo.Symbol is not IMethodSymbol methodSymbol)
+                return;
+
+            // Verify it's from Microsoft.Extensions.DependencyInjection
+            if (methodSymbol.ContainingType?.ToDisplayString() != "Microsoft.Extensions.DependencyInjection.OptionsServiceCollectionExtensions")
+                return;
+
+            // Get the type argument T from AddOptions<T>()
+            if (methodSymbol.TypeArguments.Length != 1)
+                return;
+
+            var typeArgument = methodSymbol.TypeArguments[0];
+
+            // Check if the type has the [SettingsSection] attribute
+            var hasSettingsSectionAttribute = typeArgument.GetAttributes()
+                .Any(attr => attr.AttributeClass?.Name == "SettingsSectionAttribute" ||
+                             attr.AttributeClass?.Name == "SettingsSection");
+
+            var typeLocation = typeArgument.Locations.FirstOrDefault();
+            if (typeLocation is null || !typeLocation.IsInSource)
+                return;
+
+            if (!hasSettingsSectionAttribute)
+            {
+                var diagnostic = Diagnostic.Create(
+                    Diagnostics.MissingSettingsSectionAttribute,
+                    typeArgument.Locations[0],
+                    typeArgument.Name);
+
+                context.ReportDiagnostic(diagnostic);
+            }
+
+            // Now check all writable properties of the type
+            AnalyzeConfigurationProperties(context, typeArgument, typeLocation);
+        }
+
+        private void AnalyzeConfigurationProperties(SyntaxNodeAnalysisContext context, ITypeSymbol typeSymbol, Location typeLocation)
+        {
+            var properties = typeSymbol.GetMembers()
+                .OfType<IPropertySymbol>()
+                .Where(p => !p.IsReadOnly && !p.IsStatic);
+
+            foreach (var property in properties)
+            {
+                // Check if property has any of the special attributes
+                var attributes = property.GetAttributes();
+
+                var hasSpecialAttribute = attributes.Any(attr =>
+                    attr.AttributeClass?.Name is "ConfigurationInternalAttribute" or "ConfigurationInternal" or
+                                                 "ConfigurationSecretAttribute" or "ConfigurationSecret" or
+                                                 "ConfigurationIgnoreAttribute" or "ConfigurationIgnore");
+
+                var hasDescriptionAttribute = attributes.Any(attr =>
+                    attr.AttributeClass?.Name is "DescriptionAttribute" or "Description");
+
+                // If property has none of these attributes, report diagnostic
+                if (!hasSpecialAttribute && !hasDescriptionAttribute)
+                {
+                    // Try to find the property syntax node for better location
+                    var propertyLocation = property.Locations.FirstOrDefault() ?? typeLocation;
+
+                    var diagnostic = Diagnostic.Create(
+                        Diagnostics.ConfigurationHasNoDescription,
+                        propertyLocation,
+                        property.Name, typeSymbol.Name);
+
+                    context.ReportDiagnostic(diagnostic);
+                }
+            }
+        }
+    }
+}

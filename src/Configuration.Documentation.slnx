@@ -1,0 +1,12 @@
+<Solution>
+  <Folder Name="/Solution Items/">
+    <File Path="Directory.build.props" />
+  </Folder>
+  <Project Path="Configuration.Documentation.Abstractions/Configuration.Documentation.Abstractions.csproj" Id="f65386bb-792e-4d7a-b19e-572fafd56b81" />
+  <Project Path="Configuration.Documentation.Analyzer/Configuration.Documentation.Analyzer.CodeFixes/Configuration.Documentation.Analyzer.CodeFixes.csproj" Id="53b576ee-b8d8-4228-b2c1-00e8b2550655" />
+  <Project Path="Configuration.Documentation.Analyzer/Configuration.Documentation.Analyzer.Package/Configuration.Documentation.Analyzer.Package.csproj" Id="1d48f041-34b6-4c61-997a-7e86802760b7" />
+  <Project Path="Configuration.Documentation.Analyzer/Configuration.Documentation.Analyzer.Test/Configuration.Documentation.Analyzer.Test.csproj" Id="c8b550f7-a720-4f6a-88a9-48577caf4d54" />
+  <Project Path="Configuration.Documentation.Analyzer/Configuration.Documentation.Analyzer/Configuration.Documentation.Analyzer.csproj" Id="90327fb9-e65e-49c7-903a-d2e527daf029" />
+  <Project Path="Configuration.Documentation/Configuration.Documentation.csproj" Id="1f6cb428-6803-4812-bb96-f5c80e49c4fa" />
+  <Project Path="SampleWebApplication/SampleWebApplication.csproj" />
+</Solution>

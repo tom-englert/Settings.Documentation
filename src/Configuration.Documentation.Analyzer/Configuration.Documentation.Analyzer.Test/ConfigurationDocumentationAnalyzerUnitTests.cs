@@ -1,0 +1,185 @@
+﻿using Microsoft.CodeAnalysis.CSharp.Testing;
+using Microsoft.CodeAnalysis.Testing;
+using Microsoft.Extensions.DependencyInjection;
+using TomsToolbox.Configuration.Documentation.Abstractions;
+
+namespace TomsToolbox.Configuration.Documentation.Analyzer.Test;
+
+[TestClass]
+public class ConfigurationDocumentationAnalyzerUnitTest
+{
+    [TestMethod]
+    public async Task WhenConfigClassIsConfiguredWithAllAttributes_NoDiagnosticIsEmitted()
+    {
+        const string source =
+            """
+            using Microsoft.Extensions.DependencyInjection;
+            using TomsToolbox.Configuration.Documentation.Abstractions;
+            
+            static class Application
+            {
+                static void Program()
+                {
+                    IServiceCollection services = null!;
+            
+                    services
+                        .AddSomeService()
+                        .AddOptions<MyOptions>()
+                        .BindConfiguration("ConfigClass");
+                }
+            
+                static IServiceCollection AddSomeService(this IServiceCollection services)
+                {
+                    return services;
+                }
+            }
+            
+            [SettingsSection]
+            public class {|#0:MyOptions|}
+            {
+                [System.ComponentModel.Description("The port used to connect to the host")]
+                public int Port { get; init; } = 99;
+                [System.ComponentModel.Description("The host ulr running the service")]
+                public string Host { get; init; } = "localhost";
+            }
+            """;
+
+        var test = new Test
+        {
+            TestCode = source
+        };
+
+        await test.RunAsync(TestContext.CancellationToken);
+    }
+
+    [TestMethod]
+    public async Task WhenConfigClassIsConfiguredButHasNoSectionAttribute_DiagnosticIsEmitted()
+    {
+        const string source =
+            """
+            using Microsoft.Extensions.DependencyInjection;
+            
+            static class Application
+            {
+                static void Program()
+                {
+                    IServiceCollection services = null!;
+            
+                    services
+                        .AddSomeService()
+                        .AddOptions<MyOptions>()
+                        .BindConfiguration("ConfigClass");
+                }
+            
+                static IServiceCollection AddSomeService(this IServiceCollection services)
+                {
+                    return services;
+                }
+            }
+            
+            public class {|#0:MyOptions|}
+            {
+                [System.ComponentModel.Description("The port used to connect to the host")]
+                public int Port { get; init; } = 99;
+                [System.ComponentModel.Description("The host ulr running the service")]
+                public string Host { get; init; } = "localhost";
+            }
+            """;
+
+        var test = new Test
+        {
+            TestCode = source,
+            ExpectedDiagnostics = { Diagnostics.MissingSettingsSectionAttribute.AsResult().WithArguments("MyOptions").WithLocation(0) }
+        };
+
+        await test.RunAsync(TestContext.CancellationToken);
+    }
+
+    [TestMethod]
+    public async Task WhenConfigClassIsConfiguredButHasNoAttributes_DiagnosticIsEmitted()
+    {
+        const string source =
+            """
+            using Microsoft.Extensions.DependencyInjection;
+            
+            static class Application
+            {
+                static void Program()
+                {
+                    IServiceCollection services = null!;
+            
+                    services
+                        .AddSomeService()
+                        .AddOptions<MyOptions>()
+                        .BindConfiguration("ConfigClass");
+                }
+            
+                static IServiceCollection AddSomeService(this IServiceCollection services)
+                {
+                    return services;
+                }
+            }
+            
+            public class {|#0:MyOptions|}
+            {
+                public int {|#1:Port|} { get; init; } = 99;
+                [System.ComponentModel.Description("The host ulr running the service")]
+                public string Host { get; init; } = "localhost";
+            }
+            """;
+
+        var test = new Test
+        {
+            TestCode = source,
+            ExpectedDiagnostics =
+            {
+                Diagnostics.MissingSettingsSectionAttribute.AsResult().WithArguments("MyOptions").WithLocation(0),
+                Diagnostics.ConfigurationHasNoDescription.AsResult().WithArguments("Port", "MyOptions").WithLocation(1)
+            }
+        };
+
+        await test.RunAsync(TestContext.CancellationToken);
+    }
+
+    private sealed class Test : CSharpAnalyzerTest<ConfigurationDocumentationAnalyzer, DefaultVerifier>
+    {
+        public Test()
+        {
+            ReferenceAssemblies = ReferenceAssemblies.Net.Net80.AddPackages([
+                new("Microsoft.Extensions.Options.ConfigurationExtensions", "10.0.1")
+            ]);
+
+            this.AddReferences(typeof(SettingsSectionAttribute).Assembly);
+        }
+    }
+
+    public TestContext TestContext { get; set; }
+}
+
+// Reference code:
+static class Application
+{
+    static void Program()
+    {
+        IServiceCollection services = null!;
+
+        services
+            .AddSomeService()
+            .AddOptions<MyOptions>()
+            .BindConfiguration("ConfigClass");
+    }
+
+    static IServiceCollection AddSomeService(this IServiceCollection services)
+    {
+        return services;
+    }
+}
+
+[SettingsSection]
+public class MyOptions
+{
+    [System.ComponentModel.Description("The port used to connect to the host")]
+    public int Port { get; init; } = 99;
+    [System.ComponentModel.Description("The host ulr running the service")]
+    public string Host { get; init; } = "localhost";
+}
