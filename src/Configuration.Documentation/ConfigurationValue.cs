@@ -2,4 +2,4 @@
 
 namespace TomsToolbox.Configuration.Documentation;
 
-public record ConfigurationValue(string Section, PropertyInfo Property, object? DefaultValue);
+public record ConfigurationValue(string Section, PropertyInfo Property, string? DefaultValue);

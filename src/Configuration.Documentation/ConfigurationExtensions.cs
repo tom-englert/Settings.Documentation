@@ -8,6 +8,8 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using TomsToolbox.Configuration.Documentation.Abstractions;
 
+#pragma warning disable CA1305 // Specify IFormatProvider
+
 namespace TomsToolbox.Configuration.Documentation;
 
 using static System.Web.HttpUtility;
@@ -46,7 +48,7 @@ public static class ConfigurationExtensions
             var configurationValues = configClass
                 .GetProperties()
                 .Where(propertyInfo => propertyInfo is { CanRead: true, CanWrite: true })
-                .Select(propertyInfo => new ConfigurationValue(section, propertyInfo, propertyInfo.GetValue(defaultInstance)))
+                .Select(propertyInfo => new ConfigurationValue(section, propertyInfo, Convert.ToString(propertyInfo.GetValue(defaultInstance), CultureInfo.InvariantCulture)))
                 .Where(item => !item.IsIgnored());
 
             values.AddRange(configurationValues);
@@ -74,7 +76,7 @@ public static class ConfigurationExtensions
         var sectionsUpdated = 0;
 
         const string schemaFileName = $"./{AppSettingsSchemaFileName}";
-        
+
         if (!string.Equals(appSettings["$schema"]?.ToString(), schemaFileName, StringComparison.OrdinalIgnoreCase))
         {
             appSettings["$schema"] = schemaFileName;
@@ -87,28 +89,23 @@ public static class ConfigurationExtensions
             var sectionNode = appSettings[section] ?? new JsonObject();
             var valuesAdded = 0;
 
-            foreach (var value in sectionValues)
+            foreach (var (_, property, defaultValue) in sectionValues)
             {
-                var name = value.Property.Name;
+                var name = property.Name;
 
                 if (sectionNode[name] != null)
                     continue; // don't override existing settings
 
-                var defaultValue = value.DefaultValue;
-
-                if (value.IsInternal())
-                    continue; // don't add internals, just use their defaults
-
                 ++valuesAdded;
 
-                sectionNode[name] = GetJsonValue(defaultValue, value.Property.PropertyType);
+                sectionNode[name] = GetJsonValue(defaultValue, property.PropertyType);
             }
 
-            if (valuesAdded > 0)
-            {
-                appSettings[section] = sectionNode;
-                sectionsUpdated++;
-            }
+            if (valuesAdded <= 0)
+                continue;
+
+            appSettings[section] = sectionNode;
+            sectionsUpdated++;
         }
 
         return sectionsUpdated > 0;
@@ -133,7 +130,7 @@ public static class ConfigurationExtensions
         foreach (var valueSection in valuesBySection)
         {
             var section = valueSection.Key;
-            
+
             var sectionNode = new JsonObject();
 
             sectionsNode.Add(section, sectionNode);
@@ -175,20 +172,20 @@ public static class ConfigurationExtensions
                 typeNode.Add("description", JsonValue.Create(description));
             }
 
-            typeNode.Add("default", GetJsonValue(value.IsSecret() ? "*****" : value.DefaultValue, property.PropertyType));
+            var defaultValue = value.IsSecret() ? "*****" : value.DefaultValue;
+
+            typeNode.Add("default", GetJsonValue(defaultValue, property.PropertyType));
         }
     }
 
-    private static JsonValue? GetJsonValue(object? value, Type propertyType)
+    private static JsonValue? GetJsonValue(string? value, Type propertyType)
     {
-        var stringValue = Convert.ToString(value, CultureInfo.InvariantCulture) ?? string.Empty;
-
         if (propertyType == typeof(bool))
         {
-            return JsonValue.Create(bool.TryParse(stringValue, out var b) && b);
+            return JsonValue.Create(bool.TryParse(value, out var b) && b);
         }
 
-        if (NumberTypes.Contains(propertyType) && double.TryParse(stringValue, out var d))
+        if (NumberTypes.Contains(propertyType) && double.TryParse(value, out var d))
         {
             return JsonValue.Create(d);
         }
@@ -232,10 +229,7 @@ public static class ConfigurationExtensions
         foreach (var sectionValues in valuesBySection)
         {
             var section = sectionValues.Key;
-
-            var values = sectionValues
-                .Where(item => !item.IsInternal())
-                .ToArray();
+            var values = sectionValues.ToArray();
 
             if (values.Length == 0)
                 continue;
@@ -303,7 +297,8 @@ public static class ConfigurationExtensions
         foreach (var valueSection in valuesBySection)
         {
             var section = valueSection.Key;
-            var values = valueSection.Where(item => !item.IsInternal()).ToArray();
+            var values = valueSection.ToArray();
+
             if (values.Length == 0)
                 continue;
 
@@ -350,11 +345,6 @@ public static class ConfigurationExtensions
         return propertyType == typeof(bool) ? "boolean" : "string";
     }
 
-    private static bool IsInternal(this ConfigurationValue value)
-    {
-        return value.Property.GetCustomAttribute<SettingsInternalAttribute>() != null;
-    }
-
     private static bool IsSecret(this ConfigurationValue value)
     {
         return value.Property.GetCustomAttribute<SettingsSecretAttribute>() != null;
@@ -364,8 +354,6 @@ public static class ConfigurationExtensions
     {
         return value.Property.GetCustomAttribute<SettingsIgnoreAttribute>() != null;
     }
-
-
 
     private static JsonObject? ReadAppSettings(string path)
     {
@@ -387,7 +375,7 @@ public static class ConfigurationExtensions
     private static JsonSerializerOptions CreateSerializerOptions()
     {
         var options = new JsonSerializerOptions() { WriteIndented = true };
-        
+
         options.MakeReadOnly(true);
 
         return options;

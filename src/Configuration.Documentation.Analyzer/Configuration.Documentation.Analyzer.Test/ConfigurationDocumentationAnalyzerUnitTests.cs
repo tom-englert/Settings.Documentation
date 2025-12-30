@@ -3,6 +3,8 @@ using Microsoft.CodeAnalysis.Testing;
 using Microsoft.Extensions.DependencyInjection;
 using TomsToolbox.Configuration.Documentation.Abstractions;
 
+#pragma warning disable CA1707 // Identifiers should not contain underscores
+
 namespace TomsToolbox.Configuration.Documentation.Analyzer.Test;
 
 [TestClass]
@@ -157,9 +159,11 @@ public class ConfigurationDocumentationAnalyzerUnitTest
 }
 
 // Reference code:
-static class Application
+#pragma warning disable IDE0051
+
+internal static class Application
 {
-    static void Program()
+    private static void Program()
     {
         IServiceCollection services = null!;
 
@@ -169,7 +173,7 @@ static class Application
             .BindConfiguration("ConfigClass");
     }
 
-    static IServiceCollection AddSomeService(this IServiceCollection services)
+    private static IServiceCollection AddSomeService(this IServiceCollection services)
     {
         return services;
     }

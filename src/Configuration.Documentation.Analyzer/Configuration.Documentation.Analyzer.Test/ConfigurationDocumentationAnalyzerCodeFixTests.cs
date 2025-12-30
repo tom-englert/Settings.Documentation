@@ -1,7 +1,9 @@
-using Configuration.Documentation.Analyzer;
+﻿using Configuration.Documentation.Analyzer;
 using Microsoft.CodeAnalysis.CSharp.Testing;
 using Microsoft.CodeAnalysis.Testing;
 using TomsToolbox.Configuration.Documentation.Abstractions;
+
+#pragma warning disable CA1707 // Identifiers should not contain underscores
 
 namespace TomsToolbox.Configuration.Documentation.Analyzer.Test;
 
@@ -68,9 +70,9 @@ public class ConfigurationDocumentationAnalyzerCodeFixTests
         {
             TestCode = source,
             FixedCode = fixedSource,
-            ExpectedDiagnostics = 
-            { 
-                Diagnostics.MissingSettingsSectionAttribute.AsResult().WithArguments("MyOptions").WithLocation(0) 
+            ExpectedDiagnostics =
+            {
+                Diagnostics.MissingSettingsSectionAttribute.AsResult().WithArguments("MyOptions").WithLocation(0)
             }
         };
 
@@ -137,9 +139,9 @@ public class ConfigurationDocumentationAnalyzerCodeFixTests
         {
             TestCode = source,
             FixedCode = fixedSource,
-            ExpectedDiagnostics = 
-            { 
-                Diagnostics.MissingSettingsSectionAttribute.AsResult().WithArguments("MyOptions").WithLocation(0) 
+            ExpectedDiagnostics =
+            {
+                Diagnostics.MissingSettingsSectionAttribute.AsResult().WithArguments("MyOptions").WithLocation(0)
             }
         };
 
