@@ -1,20 +1,23 @@
-using System.ComponentModel;
-using Microsoft.Extensions.Options;
-using TomsToolbox.Configuration.Documentation;
-using TomsToolbox.Configuration.Documentation.Abstractions;
+﻿using TomsToolbox.Configuration.Documentation;
 using TomsToolbox.SampleWebApplication;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddOpenApi()
     .AddOptions<MyOptions>()
-    .BindConfiguration(nameof(MyOptions));
+    .BindConfiguration(MyOptions.ConfigurationSection);
 
-builder.Services.BuildConfigurationDocumentation();
+if (builder.Environment.IsDevelopment())
+{
+    builder.Services
+        .SettingsDocumentationBuilder(options =>
+        {
+            options.TargetDirectory = @"D:\dev\GitHub\Configuration.Documentation\src\SampleWebApplication\";
+        })
+        .GenerateDocumentation();
+}
 
 var app = builder.Build();
-
-var config = app.Services.GetRequiredService<IOptions<MyOptions>>().Value;
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
@@ -24,17 +27,3 @@ if (app.Environment.IsDevelopment())
 
 app.RegisterWeatherForecastApi();
 app.Run();
-
-namespace TomsToolbox.SampleWebApplication
-{
-    [SettingsSection]
-    public class MyOptions
-    {
-        public  const string ConfigurationSection = "Dummy";
-
-        [Description("The port used to connect to the host")]
-        public int Port { get; init; } = 99;
-        [Description("The host ulr running the service")]
-        public string Host { get; init; } = "localhost";
-    }
-}

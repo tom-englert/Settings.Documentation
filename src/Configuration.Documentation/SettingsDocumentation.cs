@@ -4,8 +4,10 @@ using System.Reflection;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Nodes;
+
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
+
 using TomsToolbox.Configuration.Documentation.Abstractions;
 
 #pragma warning disable CA1305 // Specify IFormatProvider
@@ -14,34 +16,104 @@ namespace TomsToolbox.Configuration.Documentation;
 
 using static System.Web.HttpUtility;
 
-public static class ConfigurationExtensions
+public class AppSettingsFileOptions
+{
+    public required string FileName { get; set; }
+
+    public bool UpdateDefaults { get; set; }
+}
+
+public class SettingsDocumentationBuilderOptions
+{
+    public string TargetDirectory { get; set; } = ".";
+
+    public Func<Type, bool> TypeFilter { get; set; } = type => type.FullName?.StartsWith("Microsoft") != true;
+
+    public Func<Type, string?> SectionMapping { get; set; } = type => null;
+
+    public AppSettingsFileOptions[] AppSettingsFiles { get; set; } =
+    [
+        new() { FileName = "appsettings.json", UpdateDefaults = true },
+        new() { FileName = "appsettings.Development.json", UpdateDefaults = false }
+    ];
+
+    public string AppSettingsSchemaFileName { get; set; } = "appsettings.schema.json";
+
+    public bool GenerateSchema { get; set; } = true;
+
+    public string AppSettingsMarkdownFileName { get; set; } = "appsettings.md";
+
+    public bool GenerateMarkdown { get; set; } = true;
+
+    public string AppSettingsHtmlFileName { get; set; } = "appsettings.html";
+
+    public bool GenerateHtml { get; set; } = true;
+
+    public bool ThrowOnUnknownSettingsSection { get; set; } = true;
+}
+
+/// <summary>
+/// Represents the context information required to build documentation for settings, including grouped configuration values and builder options.
+/// </summary>
+/// <param name="Values">An array of groupings, where each grouping contains configuration values associated with a specific section.</param>
+/// <param name="Options">The options that control how the settings documentation is generated.</param>
+public record SettingsDocumentationBuilderContext(
+    IGrouping<string, ConfigurationValue>[] Values,
+    SettingsDocumentationBuilderOptions Options);
+
+public static class SettingsDocumentation
 {
     private static readonly HashSet<Type> NumberTypes = [typeof(int), typeof(short), typeof(double), typeof(float)];
     private static readonly JsonSerializerOptions JsonSerializerOptions = CreateSerializerOptions();
 
-    private const string AppSettingsFileName = "appsettings.json";
-    private const string AppSettingsSchemaFileName = "appsettings.schema.json";
+    public static SettingsDocumentationBuilderContext SettingsDocumentationBuilder(Assembly[] assemblies, Action<SettingsDocumentationBuilderOptions>? configureOptions = null)
+    {
+        var types = assemblies.SelectMany(assembly => assembly.GetTypes())
+            .Where(type => type.GetCustomAttribute<SettingsSectionAttribute>() != null)
+            .ToArray();
 
-    public static void BuildConfigurationDocumentation(this IServiceCollection serviceCollection)
+        return SettingsDocumentationBuilder(types, configureOptions);
+    }
+
+    public static SettingsDocumentationBuilderContext SettingsDocumentationBuilder(this IServiceCollection serviceCollection, Action<SettingsDocumentationBuilderOptions>? configureOptions = null)
     {
         var optionsTypeName = typeof(IConfigureOptions<>).Name;
 
-        var configureOptions = serviceCollection
+        var configuredOptions = serviceCollection
             .Where(descriptor => descriptor.ServiceType.Name == optionsTypeName)
             .ToArray();
 
+        var types = configuredOptions.Select(sd => sd.ServiceType.GenericTypeArguments[0])
+            .Distinct()
+            .ToArray();
+
+        return SettingsDocumentationBuilder(types, configureOptions);
+    }
+
+    public static SettingsDocumentationBuilderContext SettingsDocumentationBuilder(Type[] types, Action<SettingsDocumentationBuilderOptions>? configureOptions = null)
+    {
         var values = new List<ConfigurationValue>();
 
-        foreach (var serviceDescriptor in configureOptions)
+        var options = new SettingsDocumentationBuilderOptions();
+
+        configureOptions?.Invoke(options);
+
+        foreach (var configClass in types.Where(options.TypeFilter))
         {
-            var configClass = serviceDescriptor.ServiceType.GenericTypeArguments[0];
             if (configClass.GetCustomAttribute<SettingsIgnoreAttribute>() is not null)
                 continue;
 
-            var section = configClass.GetSection();
+            var section = configClass.GetSection() ?? options.SectionMapping(configClass);
 
             if (string.IsNullOrEmpty(section))
+            {
+                if (options.ThrowOnUnknownSettingsSection)
+                {
+                    throw new InvalidOperationException($"Unable to get the section for {configClass}; Define a custom section mapping, exclude this type or switch of {nameof(SettingsDocumentationBuilderOptions.ThrowOnUnknownSettingsSection)}");
+                }
+
                 continue;
+            }
 
             var defaultInstance = Activator.CreateInstance(configClass);
 
@@ -56,56 +128,84 @@ public static class ConfigurationExtensions
 
         var valuesBySection = values.GroupBy(value => value.Section).ToArray();
 
-        var appSettingsFolder = @"D:\dev\GitHub\ConfigurationDocs\SampleWebApplication\";
-        var appSettingsPath = Path.Combine(appSettingsFolder, AppSettingsFileName);
-
-        var appSettings = ReadAppSettings(appSettingsPath) ?? new JsonObject();
-
-        if (UpdateSettings(valuesBySection, appSettings))
-        {
-            File.WriteAllText(appSettingsPath, appSettings.ToJsonString(JsonSerializerOptions));
-        }
-
-        File.WriteAllText(Path.Combine(appSettingsFolder, "appsettings.md"), CreateMarkdownDocumentation(valuesBySection));
-        File.WriteAllText(Path.Combine(appSettingsFolder, "appsettings.html"), CreateHtmlDocumentation(valuesBySection));
-        File.WriteAllText(Path.Combine(appSettingsFolder, AppSettingsSchemaFileName), CreateSchema(valuesBySection));
+        return new(valuesBySection, options);
     }
 
-    private static bool UpdateSettings(IEnumerable<IGrouping<string, ConfigurationValue>> valuesBySection, JsonNode appSettings)
+    public static void GenerateDocumentation(this SettingsDocumentationBuilderContext context)
+    {
+        var options = context.Options;
+        var targetDirectory = options.TargetDirectory;
+
+        Directory.CreateDirectory(targetDirectory);
+
+        if (options.GenerateSchema)
+        {
+            File.WriteAllText(Path.Combine(targetDirectory, options.AppSettingsMarkdownFileName), CreateMarkdownDocumentation(context.Values));
+        }
+
+        if (options.GenerateHtml)
+        {
+            File.WriteAllText(Path.Combine(targetDirectory, options.AppSettingsHtmlFileName), CreateHtmlDocumentation(context.Values));
+        }
+
+        if (options.GenerateMarkdown)
+        {
+            File.WriteAllText(Path.Combine(targetDirectory, options.AppSettingsSchemaFileName), CreateSchema(context.Values));
+        }
+
+        foreach (var appSettingsFile in options.AppSettingsFiles)
+        {
+            var appSettingsPath = Path.Combine(targetDirectory, appSettingsFile.FileName);
+            var appSettings = ReadAppSettings(appSettingsPath) ?? new JsonObject();
+
+            if (UpdateSettings(context.Values, appSettings, options.AppSettingsSchemaFileName, appSettingsFile.UpdateDefaults, options.GenerateSchema))
+            {
+                File.WriteAllText(appSettingsPath, appSettings.ToJsonString(JsonSerializerOptions));
+            }
+        }
+    }
+
+    private static bool UpdateSettings(IEnumerable<IGrouping<string, ConfigurationValue>> valuesBySection, JsonNode appSettings, string appSettingsSchemaFileName, bool updateDefaults, bool updateSchema)
     {
         var sectionsUpdated = 0;
 
-        const string schemaFileName = $"./{AppSettingsSchemaFileName}";
-
-        if (!string.Equals(appSettings["$schema"]?.ToString(), schemaFileName, StringComparison.OrdinalIgnoreCase))
+        if (updateSchema)
         {
-            appSettings["$schema"] = schemaFileName;
-            sectionsUpdated++;
+            var schemaFileName = $"./{appSettingsSchemaFileName}";
+
+            if (!string.Equals(appSettings["$schema"]?.ToString(), schemaFileName, StringComparison.OrdinalIgnoreCase))
+            {
+                appSettings["$schema"] = schemaFileName;
+                sectionsUpdated++;
+            }
         }
 
-        foreach (var sectionValues in valuesBySection)
+        if (updateDefaults)
         {
-            var section = sectionValues.Key;
-            var sectionNode = appSettings[section] ?? new JsonObject();
-            var valuesAdded = 0;
-
-            foreach (var (_, property, defaultValue) in sectionValues)
+            foreach (var sectionValues in valuesBySection)
             {
-                var name = property.Name;
+                var section = sectionValues.Key;
+                var sectionNode = appSettings[section] ?? new JsonObject();
+                var valuesAdded = 0;
 
-                if (sectionNode[name] != null)
-                    continue; // don't override existing settings
+                foreach (var (_, property, defaultValue) in sectionValues)
+                {
+                    var name = property.Name;
 
-                ++valuesAdded;
+                    if (sectionNode[name] != null)
+                        continue; // don't override existing settings
 
-                sectionNode[name] = GetJsonValue(defaultValue, property.PropertyType);
+                    ++valuesAdded;
+
+                    sectionNode[name] = GetJsonValue(defaultValue, property.PropertyType);
+                }
+
+                if (valuesAdded <= 0)
+                    continue;
+
+                appSettings[section] = sectionNode;
+                sectionsUpdated++;
             }
-
-            if (valuesAdded <= 0)
-                continue;
-
-            appSettings[section] = sectionNode;
-            sectionsUpdated++;
         }
 
         return sectionsUpdated > 0;

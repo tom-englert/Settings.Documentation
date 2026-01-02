@@ -3,7 +3,7 @@
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
     <IsPackable>false</IsPackable>
-    <RootNamespace>Configuration.Documentation.Analyzer</RootNamespace>
+    <RootNamespace>TomsToolbox.Configuration.Documentation.Analyzer</RootNamespace>
   </PropertyGroup>
 
   <ItemGroup>

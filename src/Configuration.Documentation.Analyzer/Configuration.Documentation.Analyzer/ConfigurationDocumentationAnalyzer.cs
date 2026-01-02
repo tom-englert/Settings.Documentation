@@ -1,4 +1,5 @@
 ﻿using System.Collections.Immutable;
+
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
@@ -10,8 +11,9 @@ namespace TomsToolbox.Configuration.Documentation.Analyzer
     public class ConfigurationDocumentationAnalyzer : DiagnosticAnalyzer
     {
         public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics => ImmutableArray.Create([
-            Diagnostics.ConfigurationHasNoDescription,
-            Diagnostics.MissingSettingsSectionAttribute
+            Diagnostics.MissingDescriptionAttribute,
+            Diagnostics.MissingSettingsSectionAttribute,
+            Diagnostics.MissingInvocatorAttribute
         ]);
 
         public override void Initialize(AnalysisContext context)
@@ -31,18 +33,24 @@ namespace TomsToolbox.Configuration.Documentation.Analyzer
                 return;
 
             // Check if the method name is "AddOptions"
-            if (memberAccess.Name is not GenericNameSyntax genericName ||
-                genericName.Identifier.Text != "AddOptions")
+            if (memberAccess.Name is not GenericNameSyntax genericName)
                 return;
-
+            
             // Get the symbol info for the invocation
             var symbolInfo = context.SemanticModel.GetSymbolInfo(invocation, context.CancellationToken);
             if (symbolInfo.Symbol is not IMethodSymbol methodSymbol)
                 return;
 
-            // Verify it's from Microsoft.Extensions.DependencyInjection
-            if (methodSymbol.ContainingType?.ToDisplayString() != "Microsoft.Extensions.DependencyInjection.OptionsServiceCollectionExtensions")
-                return;
+            if (genericName.Identifier.Text != "AddOptions")
+            {
+                if (!methodSymbol.GetAttributes().Any(attr => attr.AttributeClass?.Name.StartsWith("SettingsAddOptionsInvocator") == true))
+                    return;
+            }
+            else
+            {
+                if (methodSymbol.ContainingType?.ToDisplayString() != "Microsoft.Extensions.DependencyInjection.OptionsServiceCollectionExtensions")
+                    return;
+            }
 
             // Get the type argument T from AddOptions<T>()
             if (methodSymbol.TypeArguments.Length != 1)
@@ -50,10 +58,33 @@ namespace TomsToolbox.Configuration.Documentation.Analyzer
 
             var typeArgument = methodSymbol.TypeArguments[0];
 
-            // Check if the type has the [SettingsSection] attribute
+            if (typeArgument is ITypeParameterSymbol)
+            {
+                var containingMethod = invocation.FirstAncestorOrSelf<MethodDeclarationSyntax>();
+                
+                if (containingMethod == null || containingMethod.AttributeLists.SelectMany(list => list.Attributes).Any(attr => attr.Name.ToString().StartsWith("SettingsAddOptionsInvocator")))
+                    return;
+
+                var methodIdentifier = containingMethod.Identifier;
+
+                var diagnostic = Diagnostic.Create(
+                    Diagnostics.MissingInvocatorAttribute,
+                    methodIdentifier.GetLocation(),
+                    methodIdentifier);
+
+                context.ReportDiagnostic(diagnostic);
+
+                return;
+            }
+
+            var hasSettingsIgnoreAttribute = typeArgument.GetAttributes()
+                .Any(attr => attr.AttributeClass?.Name is "SettingsIgnoreAttribute" or "SettingsIgnore");
+
+            if (hasSettingsIgnoreAttribute) 
+                return;
+
             var hasSettingsSectionAttribute = typeArgument.GetAttributes()
-                .Any(attr => attr.AttributeClass?.Name == "SettingsSectionAttribute" ||
-                             attr.AttributeClass?.Name == "SettingsSection");
+                .Any(attr => attr.AttributeClass?.Name is "SettingsSectionAttribute" or "SettingsSection");
 
             var typeLocation = typeArgument.Locations.FirstOrDefault();
             if (typeLocation is null || !typeLocation.IsInSource)
@@ -84,27 +115,26 @@ namespace TomsToolbox.Configuration.Documentation.Analyzer
                 // Check if property has any of the special attributes
                 var attributes = property.GetAttributes();
 
-                var hasSpecialAttribute = attributes.Any(attr =>
-                    attr.AttributeClass?.Name is "ConfigurationInternalAttribute" or "ConfigurationInternal" or
-                                                 "ConfigurationSecretAttribute" or "ConfigurationSecret" or
-                                                 "ConfigurationIgnoreAttribute" or "ConfigurationIgnore");
+                var hasSettingsIgnoreAttribute = attributes.Any(attr =>
+                    attr.AttributeClass?.Name is "SettingsIgnoreAttribute" or "SettingsIgnore");
+
+                if (hasSettingsIgnoreAttribute)
+                    continue;
 
                 var hasDescriptionAttribute = attributes.Any(attr =>
                     attr.AttributeClass?.Name is "DescriptionAttribute" or "Description");
 
-                // If property has none of these attributes, report diagnostic
-                if (!hasSpecialAttribute && !hasDescriptionAttribute)
-                {
-                    // Try to find the property syntax node for better location
-                    var propertyLocation = property.Locations.FirstOrDefault() ?? typeLocation;
+                if (hasDescriptionAttribute) 
+                    continue;
 
-                    var diagnostic = Diagnostic.Create(
-                        Diagnostics.ConfigurationHasNoDescription,
-                        propertyLocation,
-                        property.Name, typeSymbol.Name);
+                var propertyLocation = property.Locations.FirstOrDefault() ?? typeLocation;
 
-                    context.ReportDiagnostic(diagnostic);
-                }
+                var diagnostic = Diagnostic.Create(
+                    Diagnostics.MissingDescriptionAttribute,
+                    propertyLocation,
+                    property.Name, typeSymbol.Name);
+
+                context.ReportDiagnostic(diagnostic);
             }
         }
     }

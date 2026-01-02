@@ -27,7 +27,7 @@ public class ConfigurationDocumentationAnalyzerUnitTest
                     services
                         .AddSomeService()
                         .AddOptions<MyOptions>()
-                        .BindConfiguration("ConfigClass");
+                        .BindConfiguration("MyOptions");
                 }
             
                 static IServiceCollection AddSomeService(this IServiceCollection services)
@@ -70,7 +70,7 @@ public class ConfigurationDocumentationAnalyzerUnitTest
                     services
                         .AddSomeService()
                         .AddOptions<MyOptions>()
-                        .BindConfiguration("ConfigClass");
+                        .BindConfiguration("MyOptions");
                 }
             
                 static IServiceCollection AddSomeService(this IServiceCollection services)
@@ -113,7 +113,7 @@ public class ConfigurationDocumentationAnalyzerUnitTest
                     services
                         .AddSomeService()
                         .AddOptions<MyOptions>()
-                        .BindConfiguration("ConfigClass");
+                        .BindConfiguration("MyOptions");
                 }
             
                 static IServiceCollection AddSomeService(this IServiceCollection services)
@@ -136,7 +136,102 @@ public class ConfigurationDocumentationAnalyzerUnitTest
             ExpectedDiagnostics =
             {
                 Diagnostics.MissingSettingsSectionAttribute.AsResult().WithArguments("MyOptions").WithLocation(0),
-                Diagnostics.ConfigurationHasNoDescription.AsResult().WithArguments("Port", "MyOptions").WithLocation(1)
+                Diagnostics.MissingDescriptionAttribute.AsResult().WithArguments("Port", "MyOptions").WithLocation(1)
+            }
+        };
+
+        await test.RunAsync(TestContext.CancellationToken);
+    }
+
+    [TestMethod]
+    public async Task WhenConfigClassIsIndirectlyConfiguredButHasNoAttributes_DiagnosticIsEmitted()
+    {
+        const string source =
+            """
+            using Microsoft.Extensions.DependencyInjection;
+            
+            static class Application
+            {
+                static void Program()
+                {
+                    IServiceCollection services = null!;
+            
+                    services
+                        .CustomAddOptions<MyOptions>();
+                }
+            
+                static IServiceCollection {|#0:CustomAddOptions|}<T>(this IServiceCollection services) where T : class
+                {
+                    services.AddOptions<T>()
+                        .BindConfiguration(typeof(T).Name);
+
+                    return services;
+                }
+            }
+            
+            public class MyOptions
+            {
+                public int {|#1:Port|} { get; init; } = 99;
+                [System.ComponentModel.Description("The host ulr running the service")]
+                public string Host { get; init; } = "localhost";
+            }
+            """;
+
+        var test = new Test
+        {
+            TestCode = source,
+            ExpectedDiagnostics =
+            {
+                Diagnostics.MissingInvocatorAttribute.AsResult().WithArguments("CustomAddOptions").WithLocation(0),
+            }
+        };
+
+        await test.RunAsync(TestContext.CancellationToken);
+    }
+
+    [TestMethod]
+    public async Task WhenConfigClassIsIndirectlyConfiguredAndHasInvocatorAttribute_DiagnosticIsEmitted()
+    {
+        const string source =
+            """
+            using Microsoft.Extensions.DependencyInjection;
+            using TomsToolbox.Configuration.Documentation.Abstractions;
+            
+            static class Application
+            {
+                static void Program()
+                {
+                    IServiceCollection services = null!;
+            
+                    services
+                        .CustomAddOptions<MyOptions>();
+                }
+            
+                [SettingsAddOptionsInvocator]
+                static IServiceCollection CustomAddOptions<T>(this IServiceCollection services) where T : class
+                {
+                    services.AddOptions<T>()
+                        .BindConfiguration(typeof(T).Name);
+
+                    return services;
+                }
+            }
+            
+            public class {|#0:MyOptions|}
+            {
+                public int {|#1:Port|} { get; init; } = 99;
+                [System.ComponentModel.Description("The host ulr running the service")]
+                public string Host { get; init; } = "localhost";
+            }
+            """;
+
+        var test = new Test
+        {
+            TestCode = source,
+            ExpectedDiagnostics =
+            {
+                Diagnostics.MissingSettingsSectionAttribute.AsResult().WithArguments("MyOptions").WithLocation(0),
+                Diagnostics.MissingDescriptionAttribute.AsResult().WithArguments("Port", "MyOptions").WithLocation(1)
             }
         };
 
@@ -170,7 +265,7 @@ internal static class Application
         services
             .AddSomeService()
             .AddOptions<MyOptions>()
-            .BindConfiguration("ConfigClass");
+            .BindConfiguration("MyOptions");
     }
 
     private static IServiceCollection AddSomeService(this IServiceCollection services)
@@ -179,6 +274,9 @@ internal static class Application
     }
 }
 
+/// <summary>
+/// Some documentation about MyOptions
+/// </summary>
 [SettingsSection]
 public class MyOptions
 {

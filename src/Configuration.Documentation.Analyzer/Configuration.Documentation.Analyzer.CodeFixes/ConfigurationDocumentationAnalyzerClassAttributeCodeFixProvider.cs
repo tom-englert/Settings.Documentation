@@ -1,17 +1,12 @@
-﻿using Microsoft.CodeAnalysis;
-using Microsoft.CodeAnalysis.CodeFixes;
-using System.Collections.Immutable;
+﻿using System.Collections.Immutable;
 using System.Composition;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
-using Microsoft.CodeAnalysis.CodeActions;
-using Microsoft.CodeAnalysis.CSharp;
-using Microsoft.CodeAnalysis.CSharp.Syntax;
-using Microsoft.CodeAnalysis.Formatting;
-using TomsToolbox.Configuration.Documentation.Analyzer;
 
-namespace Configuration.Documentation.Analyzer;
+using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CodeActions;
+using Microsoft.CodeAnalysis.CodeFixes;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
+
+namespace TomsToolbox.Configuration.Documentation.Analyzer;
 
 [ExportCodeFixProvider(LanguageNames.CSharp, Name = nameof(ConfigurationDocumentationAnalyzerClassAttributeCodeFixProvider)), Shared]
 public class ConfigurationDocumentationAnalyzerClassAttributeCodeFixProvider : CodeFixProvider
@@ -20,6 +15,7 @@ public class ConfigurationDocumentationAnalyzerClassAttributeCodeFixProvider : C
 
     public sealed override FixAllProvider GetFixAllProvider()
     {
+
         return WellKnownFixAllProviders.BatchFixer;
     }
 
@@ -30,14 +26,20 @@ public class ConfigurationDocumentationAnalyzerClassAttributeCodeFixProvider : C
         foreach (var diagnostic in context.Diagnostics)
         {
             var diagnosticSpan = diagnostic.Location.SourceSpan;
-            // Find the type declaration identified by the diagnostic.
-            var typeDeclaration = root?.FindNode(diagnosticSpan);
-            if (typeDeclaration == null)
+
+            var syntaxNode = root?.FindNode(diagnosticSpan);
+            if (syntaxNode is not TypeDeclarationSyntax typeDeclaration)
                 continue;
-            // Register a code action that will invoke the fix.
-            var codeAction = CodeAction.Create("Add [SettingsSection] attribute", c => CodeFixProviderHelper.AddAttributeAsync(context.Document, (TypeDeclarationSyntax)typeDeclaration, "SettingsSection", "Namespace", c), "AddSettingsSectionAttribute");
+
+            var codeAction = CodeAction.Create("Add [SettingsSection] attribute", ApplyFix, "AddSettingsSectionAttribute");
 
             context.RegisterCodeFix(codeAction, diagnostic);
+            continue;
+
+            Task<Document> ApplyFix(CancellationToken c)
+            {
+                return context.Document.AddAttributeAsync(typeDeclaration, "SettingsSection", "TomsToolbox.Configuration.Documentation.Abstractions", c);
+            }
         }
     }
 }
