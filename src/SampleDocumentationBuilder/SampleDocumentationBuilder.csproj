@@ -11,4 +11,9 @@
     <ProjectReference Include="..\SampleWebApplication\SampleWebApplication.csproj" />
   </ItemGroup>
 
+  <Target Name="UpdateDocumentation" AfterTargets="Build">
+    <Message Importance="high" Text="Updating documentation files from SampleWebApplication project..." />
+    <Exec Command="dotnet &quot;$(TargetPath)&quot;" />
+  </Target>
+
 </Project>
