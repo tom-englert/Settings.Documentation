@@ -6,10 +6,10 @@ using Microsoft.CodeAnalysis.CodeActions;
 using Microsoft.CodeAnalysis.CodeFixes;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 
-namespace TomsToolbox.Configuration.Documentation.Analyzer;
+namespace TomsToolbox.Settings.Documentation.Analyzer;
 
-[ExportCodeFixProvider(LanguageNames.CSharp, Name = nameof(ConfigurationDocumentationAnalyzerMethodAttributeCodeFixProvider)), Shared]
-public class ConfigurationDocumentationAnalyzerMethodAttributeCodeFixProvider : CodeFixProvider
+[ExportCodeFixProvider(LanguageNames.CSharp, Name = nameof(SettingsDocumentationAnalyzerMethodAttributeCodeFixProvider)), Shared]
+public class SettingsDocumentationAnalyzerMethodAttributeCodeFixProvider : CodeFixProvider
 {
     public sealed override ImmutableArray<string> FixableDiagnosticIds => ImmutableArray.Create(Diagnostics.MissingInvocatorAttribute.Id);
 
@@ -39,7 +39,7 @@ public class ConfigurationDocumentationAnalyzerMethodAttributeCodeFixProvider : 
 
             Task<Document> ApplyFix(CancellationToken c)
             {
-                return context.Document.AddAttributeAsync(methodDeclaration, "SettingsAddOptionsInvocator", "TomsToolbox.Configuration.Documentation.Abstractions", c);
+                return context.Document.AddAttributeAsync(methodDeclaration, "SettingsAddOptionsInvocator", "TomsToolbox.Settings.Documentation.Abstractions", c);
             }
         }
     }

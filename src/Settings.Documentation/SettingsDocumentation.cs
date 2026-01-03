@@ -8,11 +8,11 @@ using System.Text.Json.Nodes;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 
-using TomsToolbox.Configuration.Documentation.Abstractions;
+using TomsToolbox.Settings.Documentation.Abstractions;
 
 #pragma warning disable CA1305 // Specify IFormatProvider
 
-namespace TomsToolbox.Configuration.Documentation;
+namespace TomsToolbox.Settings.Documentation;
 
 using static System.Web.HttpUtility;
 
@@ -58,7 +58,7 @@ public class SettingsDocumentationBuilderOptions
 /// <param name="Values">An array of groupings, where each grouping contains configuration values associated with a specific section.</param>
 /// <param name="Options">The options that control how the settings documentation is generated.</param>
 public record SettingsDocumentationBuilderContext(
-    IGrouping<string, ConfigurationValue>[] Values,
+    IGrouping<string, SettingsValue>[] Values,
     SettingsDocumentationBuilderOptions Options);
 
 public static class SettingsDocumentation
@@ -92,7 +92,7 @@ public static class SettingsDocumentation
 
     public static SettingsDocumentationBuilderContext SettingsDocumentationBuilder(Type[] types, Action<SettingsDocumentationBuilderOptions>? configureOptions = null)
     {
-        var values = new List<ConfigurationValue>();
+        var values = new List<SettingsValue>();
 
         var options = new SettingsDocumentationBuilderOptions();
 
@@ -120,7 +120,7 @@ public static class SettingsDocumentation
             var configurationValues = configClass
                 .GetProperties()
                 .Where(propertyInfo => propertyInfo is { CanRead: true, CanWrite: true })
-                .Select(propertyInfo => new ConfigurationValue(section, propertyInfo, Convert.ToString(propertyInfo.GetValue(defaultInstance), CultureInfo.InvariantCulture)))
+                .Select(propertyInfo => new SettingsValue(section, propertyInfo, Convert.ToString(propertyInfo.GetValue(defaultInstance), CultureInfo.InvariantCulture)))
                 .Where(item => !item.IsIgnored());
 
             values.AddRange(configurationValues);
@@ -165,7 +165,7 @@ public static class SettingsDocumentation
         }
     }
 
-    private static bool UpdateSettings(IEnumerable<IGrouping<string, ConfigurationValue>> valuesBySection, JsonNode appSettings, string appSettingsSchemaFileName, bool updateDefaults, bool updateSchema)
+    private static bool UpdateSettings(IEnumerable<IGrouping<string, SettingsValue>> valuesBySection, JsonNode appSettings, string appSettingsSchemaFileName, bool updateDefaults, bool updateSchema)
     {
         var sectionsUpdated = 0;
 
@@ -211,7 +211,7 @@ public static class SettingsDocumentation
         return sectionsUpdated > 0;
     }
 
-    private static string CreateSchema(IEnumerable<IGrouping<string, ConfigurationValue>> valuesBySection)
+    private static string CreateSchema(IEnumerable<IGrouping<string, SettingsValue>> valuesBySection)
     {
         const string schemaScaffold = """
         {
@@ -246,7 +246,7 @@ public static class SettingsDocumentation
         return schema.ToJsonString(JsonSerializerOptions);
     }
 
-    private static void AddSchemaProperties(IEnumerable<ConfigurationValue> values, JsonObject sectionNode)
+    private static void AddSchemaProperties(IEnumerable<SettingsValue> values, JsonObject sectionNode)
     {
         foreach (var value in values)
         {
@@ -293,12 +293,12 @@ public static class SettingsDocumentation
         return JsonValue.Create(value);
     }
 
-    private static string CreateMarkdownDocumentation(IEnumerable<IGrouping<string, ConfigurationValue>> valuesBySection)
+    private static string CreateMarkdownDocumentation(IEnumerable<IGrouping<string, SettingsValue>> valuesBySection)
     {
         var text = new StringBuilder()
             .AppendLine("# Configuration Settings");
 
-        static void AddPropertyDocumentation(IEnumerable<ConfigurationValue> values, StringBuilder text)
+        static void AddPropertyDocumentation(IEnumerable<SettingsValue> values, StringBuilder text)
         {
             foreach (var value in values)
             {
@@ -342,7 +342,7 @@ public static class SettingsDocumentation
         return text.ToString();
     }
 
-    private static string CreateHtmlDocumentation(IEnumerable<IGrouping<string, ConfigurationValue>> valuesBySection)
+    private static string CreateHtmlDocumentation(IEnumerable<IGrouping<string, SettingsValue>> valuesBySection)
     {
         const string header = @"<!DOCTYPE html>
 <html lang=""en"">
@@ -362,7 +362,7 @@ public static class SettingsDocumentation
         var text = new StringBuilder(header)
             .AppendLine("<h2>Configuration Settings</h2>");
 
-        static void AddPropertyDocumentation(IEnumerable<ConfigurationValue> configurationValues, StringBuilder text)
+        static void AddPropertyDocumentation(IEnumerable<SettingsValue> configurationValues, StringBuilder text)
         {
             foreach (var value in configurationValues)
             {
@@ -445,12 +445,12 @@ public static class SettingsDocumentation
         return propertyType == typeof(bool) ? "boolean" : "string";
     }
 
-    private static bool IsSecret(this ConfigurationValue value)
+    private static bool IsSecret(this SettingsValue value)
     {
         return value.Property.GetCustomAttribute<SettingsSecretAttribute>() != null;
     }
 
-    private static bool IsIgnored(this ConfigurationValue value)
+    private static bool IsIgnored(this SettingsValue value)
     {
         return value.Property.GetCustomAttribute<SettingsIgnoreAttribute>() != null;
     }

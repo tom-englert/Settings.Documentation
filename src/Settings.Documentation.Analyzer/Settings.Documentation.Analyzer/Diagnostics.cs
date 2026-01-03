@@ -1,6 +1,6 @@
 ﻿using Microsoft.CodeAnalysis;
 
-namespace TomsToolbox.Configuration.Documentation.Analyzer
+namespace TomsToolbox.Settings.Documentation.Analyzer
 {
     public static class Diagnostics
     {

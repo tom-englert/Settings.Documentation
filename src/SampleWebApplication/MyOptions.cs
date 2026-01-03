@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel;
 
-using TomsToolbox.Configuration.Documentation.Abstractions;
+using TomsToolbox.Settings.Documentation.Abstractions;
 
 namespace TomsToolbox.SampleWebApplication;
 
@@ -13,4 +13,29 @@ public class MyOptions
     public int Port { get; init; } = 99;
     [Description("The host ulr running the service")]
     public string Host { get; init; } = "localhost";
+}
+
+[SettingsSection]
+public class DatabaseConnectionStrings
+{
+    public const string ConfigurationSection = "ConnectionStrings";
+
+    [Description("The database connection string")]
+    public string Database { get; init; } = "Server=.;Database=MyDb;Trusted_Connection=True;";
+
+    [Description("The database users password")]
+    [SettingsSecret]
+    public string Password { get; init; } = "SecretPassword";
+}
+
+[SettingsSection]
+public class MessageQueueConnectionStrings
+{
+    public const string ConfigurationSection = "ConnectionStrings";
+
+    [Description("The message queue connection string")]
+    public string MessageQueue { get; init; } = "Server=.;Queue=MyQueue";
+
+    [SettingsIgnore]
+    public string UndocumentedFeature { get; init; } = "Not documented";
 }

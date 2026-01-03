@@ -3,7 +3,7 @@ using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Formatting;
 
-namespace TomsToolbox.Configuration.Documentation.Analyzer;
+namespace TomsToolbox.Settings.Documentation.Analyzer;
 
 public static class CodeFixProviderHelper
 {

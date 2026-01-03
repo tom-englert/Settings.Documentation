@@ -3,7 +3,7 @@
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
     <IsPackable>false</IsPackable>
-    <RootNamespace>TomsToolbox.Configuration.Documentation.Analyzer</RootNamespace>
+    <RootNamespace>TomsToolbox.Settings.Documentation.Analyzer</RootNamespace>
   </PropertyGroup>
 
   <ItemGroup>
@@ -11,7 +11,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Configuration.Documentation.Analyzer\Configuration.Documentation.Analyzer.csproj" />
+    <ProjectReference Include="..\Settings.Documentation.Analyzer\Settings.Documentation.Analyzer.csproj" />
   </ItemGroup>
 
 </Project>

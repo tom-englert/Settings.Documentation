@@ -1,4 +1,4 @@
-﻿namespace TomsToolbox.Configuration.Documentation.Abstractions;
+﻿namespace TomsToolbox.Settings.Documentation.Abstractions;
 
 /// <summary>
 /// Indicates that a class or property should be excluded from settings documentation.

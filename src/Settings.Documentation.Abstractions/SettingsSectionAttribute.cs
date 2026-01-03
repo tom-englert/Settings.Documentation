@@ -1,4 +1,4 @@
-﻿namespace TomsToolbox.Configuration.Documentation.Abstractions;
+﻿namespace TomsToolbox.Settings.Documentation.Abstractions;
 
 /// <summary>
 /// Specifies the configuration section name associated with a settings class.

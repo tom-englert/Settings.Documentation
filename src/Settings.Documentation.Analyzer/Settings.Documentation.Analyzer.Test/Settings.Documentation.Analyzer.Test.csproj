@@ -22,9 +22,9 @@
 	</ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\Configuration.Documentation\Configuration.Documentation.csproj" />
-    <ProjectReference Include="..\Configuration.Documentation.Analyzer.CodeFixes\Configuration.Documentation.Analyzer.CodeFixes.csproj" />
-    <ProjectReference Include="..\Configuration.Documentation.Analyzer\Configuration.Documentation.Analyzer.csproj" />
+    <ProjectReference Include="..\..\Settings.Documentation\Settings.Documentation.csproj" />
+    <ProjectReference Include="..\Settings.Documentation.Analyzer.CodeFixes\Settings.Documentation.Analyzer.CodeFixes.csproj" />
+    <ProjectReference Include="..\Settings.Documentation.Analyzer\Settings.Documentation.Analyzer.csproj" />
   </ItemGroup>
 
 </Project>

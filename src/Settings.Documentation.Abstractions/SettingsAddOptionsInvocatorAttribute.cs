@@ -1,4 +1,4 @@
-﻿namespace TomsToolbox.Configuration.Documentation.Abstractions;
+﻿namespace TomsToolbox.Settings.Documentation.Abstractions;
 
 /// <summary>
 /// Indicates that a method is used to invoke the AddOptions method for adding configuration options.

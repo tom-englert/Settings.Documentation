@@ -1,4 +1,4 @@
-﻿namespace TomsToolbox.Configuration.Documentation.Abstractions;
+﻿namespace TomsToolbox.Settings.Documentation.Abstractions;
 
 /// <summary>
 /// Indicates that a property contains sensitive or secret configuration data that should be represented as '*****' in the documentation.

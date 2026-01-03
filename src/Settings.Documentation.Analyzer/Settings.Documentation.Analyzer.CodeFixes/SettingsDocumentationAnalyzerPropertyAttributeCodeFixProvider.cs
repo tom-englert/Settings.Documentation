@@ -6,16 +6,15 @@ using Microsoft.CodeAnalysis.CodeActions;
 using Microsoft.CodeAnalysis.CodeFixes;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 
-namespace TomsToolbox.Configuration.Documentation.Analyzer;
+namespace TomsToolbox.Settings.Documentation.Analyzer;
 
-[ExportCodeFixProvider(LanguageNames.CSharp, Name = nameof(ConfigurationDocumentationAnalyzerClassAttributeCodeFixProvider)), Shared]
-public class ConfigurationDocumentationAnalyzerClassAttributeCodeFixProvider : CodeFixProvider
+[ExportCodeFixProvider(LanguageNames.CSharp, Name = nameof(SettingsDocumentationAnalyzerPropertyAttributeCodeFixProvider)), Shared]
+public class SettingsDocumentationAnalyzerPropertyAttributeCodeFixProvider : CodeFixProvider
 {
-    public sealed override ImmutableArray<string> FixableDiagnosticIds => ImmutableArray.Create(Diagnostics.MissingSettingsSectionAttribute.Id);
+    public sealed override ImmutableArray<string> FixableDiagnosticIds => ImmutableArray.Create(Diagnostics.MissingDescriptionAttribute.Id);
 
     public sealed override FixAllProvider GetFixAllProvider()
     {
-
         return WellKnownFixAllProviders.BatchFixer;
     }
 
@@ -26,20 +25,22 @@ public class ConfigurationDocumentationAnalyzerClassAttributeCodeFixProvider : C
         foreach (var diagnostic in context.Diagnostics)
         {
             var diagnosticSpan = diagnostic.Location.SourceSpan;
-
+            // Find the property declaration identified by the diagnostic.
             var syntaxNode = root?.FindNode(diagnosticSpan);
-            if (syntaxNode is not TypeDeclarationSyntax typeDeclaration)
+            if (syntaxNode is not PropertyDeclarationSyntax propertyDeclaration)
                 continue;
 
-            var codeAction = CodeAction.Create("Add [SettingsSection] attribute", ApplyFix, "AddSettingsSectionAttribute");
+            // Register a code action that will invoke the fix.
+            var codeAction = CodeAction.Create("Add [Description] attribute", ApplyFix, "AddDescriptionAttribute");
 
             context.RegisterCodeFix(codeAction, diagnostic);
             continue;
 
             Task<Document> ApplyFix(CancellationToken c)
             {
-                return context.Document.AddAttributeAsync(typeDeclaration, "SettingsSection", "TomsToolbox.Configuration.Documentation.Abstractions", c);
+                return context.Document.AddAttributeAsync(propertyDeclaration, "Description(\"TODO: Add description\")", "System.ComponentModel", c);
             }
         }
+
     }
 }

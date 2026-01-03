@@ -1,21 +1,6 @@
-﻿using TomsToolbox.Configuration.Documentation;
-using TomsToolbox.SampleWebApplication;
+﻿using TomsToolbox.SampleWebApplication;
 
-var builder = WebApplication.CreateBuilder(args);
-
-builder.Services.AddOpenApi()
-    .AddOptions<MyOptions>()
-    .BindConfiguration(MyOptions.ConfigurationSection);
-
-if (builder.Environment.IsDevelopment())
-{
-    builder.Services
-        .SettingsDocumentationBuilder(options =>
-        {
-            options.TargetDirectory = @"D:\dev\GitHub\Configuration.Documentation\src\SampleWebApplication\";
-        })
-        .GenerateDocumentation();
-}
+var builder = AppBuilder.CreateBuilder(args);
 
 var app = builder.Build();
 

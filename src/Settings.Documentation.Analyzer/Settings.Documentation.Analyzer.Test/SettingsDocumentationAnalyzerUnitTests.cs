@@ -1,14 +1,14 @@
 ﻿using Microsoft.CodeAnalysis.CSharp.Testing;
 using Microsoft.CodeAnalysis.Testing;
 using Microsoft.Extensions.DependencyInjection;
-using TomsToolbox.Configuration.Documentation.Abstractions;
+using TomsToolbox.Settings.Documentation.Abstractions;
 
 #pragma warning disable CA1707 // Identifiers should not contain underscores
 
-namespace TomsToolbox.Configuration.Documentation.Analyzer.Test;
+namespace TomsToolbox.Settings.Documentation.Analyzer.Test;
 
 [TestClass]
-public class ConfigurationDocumentationAnalyzerUnitTest
+public class SettingsDocumentationAnalyzerUnitTest
 {
     [TestMethod]
     public async Task WhenConfigClassIsConfiguredWithAllAttributes_NoDiagnosticIsEmitted()
@@ -16,7 +16,7 @@ public class ConfigurationDocumentationAnalyzerUnitTest
         const string source =
             """
             using Microsoft.Extensions.DependencyInjection;
-            using TomsToolbox.Configuration.Documentation.Abstractions;
+            using TomsToolbox.Settings.Documentation.Abstractions;
             
             static class Application
             {
@@ -195,7 +195,7 @@ public class ConfigurationDocumentationAnalyzerUnitTest
         const string source =
             """
             using Microsoft.Extensions.DependencyInjection;
-            using TomsToolbox.Configuration.Documentation.Abstractions;
+            using TomsToolbox.Settings.Documentation.Abstractions;
             
             static class Application
             {
@@ -238,7 +238,7 @@ public class ConfigurationDocumentationAnalyzerUnitTest
         await test.RunAsync(TestContext.CancellationToken);
     }
 
-    private sealed class Test : CSharpAnalyzerTest<ConfigurationDocumentationAnalyzer, DefaultVerifier>
+    private sealed class Test : CSharpAnalyzerTest<SettingsDocumentationAnalyzer, DefaultVerifier>
     {
         public Test()
         {

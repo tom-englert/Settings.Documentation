@@ -5,10 +5,10 @@ using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Diagnostics;
 
-namespace TomsToolbox.Configuration.Documentation.Analyzer
+namespace TomsToolbox.Settings.Documentation.Analyzer
 {
     [DiagnosticAnalyzer(LanguageNames.CSharp)]
-    public class ConfigurationDocumentationAnalyzer : DiagnosticAnalyzer
+    public class SettingsDocumentationAnalyzer : DiagnosticAnalyzer
     {
         public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics => ImmutableArray.Create([
             Diagnostics.MissingDescriptionAttribute,

@@ -8,7 +8,7 @@
   </PropertyGroup>
 
   <PropertyGroup>
-    <PackageId>Configuration.Documentation.Analyzer</PackageId>
+    <PackageId>Settings.Documentation.Analyzer</PackageId>
     <PackageVersion>1.0.0.0</PackageVersion>
     <Authors>tom-englert.de</Authors>
     <PackageLicenseUrl>http://LICENSE_URL_HERE_OR_DELETE_THIS_LINE</PackageLicenseUrl>
@@ -16,24 +16,24 @@
     <PackageIconUrl>http://ICON_URL_HERE_OR_DELETE_THIS_LINE</PackageIconUrl>
     <RepositoryUrl>http://REPOSITORY_URL_HERE_OR_DELETE_THIS_LINE</RepositoryUrl>
     <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
-    <Description>Configuration.Documentation.Analyzer</Description>
+    <Description>Settings.Documentation.Analyzer</Description>
     <PackageReleaseNotes>Summary of changes made in this release of the package.</PackageReleaseNotes>
     <Copyright>Copyright</Copyright>
-    <PackageTags>Configuration.Documentation.Analyzer, analyzers</PackageTags>
+    <PackageTags>Settings.Documentation.Analyzer, analyzers</PackageTags>
     <DevelopmentDependency>true</DevelopmentDependency>
     <NoPackageAnalysis>true</NoPackageAnalysis>
     <TargetsForTfmSpecificContentInPackage>$(TargetsForTfmSpecificContentInPackage);_AddAnalyzersToOutput</TargetsForTfmSpecificContentInPackage>
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Configuration.Documentation.Analyzer.CodeFixes\Configuration.Documentation.Analyzer.CodeFixes.csproj" />
-    <ProjectReference Include="..\Configuration.Documentation.Analyzer\Configuration.Documentation.Analyzer.csproj" />
+    <ProjectReference Include="..\Settings.Documentation.Analyzer.CodeFixes\Settings.Documentation.Analyzer.CodeFixes.csproj" />
+    <ProjectReference Include="..\Settings.Documentation.Analyzer\Settings.Documentation.Analyzer.csproj" />
   </ItemGroup>
 
   <Target Name="_AddAnalyzersToOutput">
     <ItemGroup>
-      <TfmSpecificPackageFile Include="$(OutputPath)\Configuration.Documentation.Analyzer.dll" PackagePath="analyzers/dotnet/cs" />
-      <TfmSpecificPackageFile Include="$(OutputPath)\Configuration.Documentation.Analyzer.CodeFixes.dll" PackagePath="analyzers/dotnet/cs" />
+      <TfmSpecificPackageFile Include="$(OutputPath)\Settings.Documentation.Analyzer.dll" PackagePath="analyzers/dotnet/cs" />
+      <TfmSpecificPackageFile Include="$(OutputPath)\Settings.Documentation.Analyzer.CodeFixes.dll" PackagePath="analyzers/dotnet/cs" />
     </ItemGroup>
   </Target>
 

@@ -1,14 +1,14 @@
 ﻿using Microsoft.CodeAnalysis.CSharp.Testing;
 using Microsoft.CodeAnalysis.Testing;
 
-using TomsToolbox.Configuration.Documentation.Abstractions;
+using TomsToolbox.Settings.Documentation.Abstractions;
 
 #pragma warning disable CA1707 // Identifiers should not contain underscores
 
-namespace TomsToolbox.Configuration.Documentation.Analyzer.Test;
+namespace TomsToolbox.Settings.Documentation.Analyzer.Test;
 
 [TestClass]
-public class ConfigurationDocumentationAnalyzerCodeFixTests
+public class SettingsDocumentationAnalyzerCodeFixTests
 {
     [TestMethod]
     public async Task AddSettingsSectionAttribute_AddsAttributeToClass()
@@ -41,7 +41,7 @@ public class ConfigurationDocumentationAnalyzerCodeFixTests
         const string fixedSource =
             """
             using Microsoft.Extensions.DependencyInjection;
-            using TomsToolbox.Configuration.Documentation.Abstractions;
+            using TomsToolbox.Settings.Documentation.Abstractions;
             
             static class Application
             {
@@ -83,7 +83,7 @@ public class ConfigurationDocumentationAnalyzerCodeFixTests
     {
         const string source =
             """
-            using TomsToolbox.Configuration.Documentation.Abstractions;
+            using TomsToolbox.Settings.Documentation.Abstractions;
             using Microsoft.Extensions.DependencyInjection;
             using System;
             
@@ -109,7 +109,7 @@ public class ConfigurationDocumentationAnalyzerCodeFixTests
 
         const string fixedSource =
             """
-            using TomsToolbox.Configuration.Documentation.Abstractions;
+            using TomsToolbox.Settings.Documentation.Abstractions;
             using Microsoft.Extensions.DependencyInjection;
             using System;
             
@@ -152,7 +152,7 @@ public class ConfigurationDocumentationAnalyzerCodeFixTests
     {
         const string source =
             """
-            using TomsToolbox.Configuration.Documentation.Abstractions;
+            using TomsToolbox.Settings.Documentation.Abstractions;
             using Microsoft.Extensions.DependencyInjection;
             using System;
             
@@ -180,7 +180,7 @@ public class ConfigurationDocumentationAnalyzerCodeFixTests
 
         const string fixedSource =
             """
-            using TomsToolbox.Configuration.Documentation.Abstractions;
+            using TomsToolbox.Settings.Documentation.Abstractions;
             using Microsoft.Extensions.DependencyInjection;
             using System;
             
@@ -226,7 +226,7 @@ public class ConfigurationDocumentationAnalyzerCodeFixTests
         const string source =
             """
             using Microsoft.Extensions.DependencyInjection;
-            using TomsToolbox.Configuration.Documentation.Abstractions;
+            using TomsToolbox.Settings.Documentation.Abstractions;
             
             static class Application
             {
@@ -252,7 +252,7 @@ public class ConfigurationDocumentationAnalyzerCodeFixTests
         const string fixedSource =
             """
             using Microsoft.Extensions.DependencyInjection;
-            using TomsToolbox.Configuration.Documentation.Abstractions;
+            using TomsToolbox.Settings.Documentation.Abstractions;
             using System.ComponentModel;
             
             static class Application
@@ -297,7 +297,7 @@ public class ConfigurationDocumentationAnalyzerCodeFixTests
             """
             using Microsoft.Extensions.DependencyInjection;
             using System.ComponentModel;
-            using TomsToolbox.Configuration.Documentation.Abstractions;
+            using TomsToolbox.Settings.Documentation.Abstractions;
             
             static class Application
             {
@@ -322,7 +322,7 @@ public class ConfigurationDocumentationAnalyzerCodeFixTests
             """
             using Microsoft.Extensions.DependencyInjection;
             using System.ComponentModel;
-            using TomsToolbox.Configuration.Documentation.Abstractions;
+            using TomsToolbox.Settings.Documentation.Abstractions;
             
             static class Application
             {
@@ -363,7 +363,7 @@ public class ConfigurationDocumentationAnalyzerCodeFixTests
         const string source =
             """
             using Microsoft.Extensions.DependencyInjection;
-            using TomsToolbox.Configuration.Documentation.Abstractions;
+            using TomsToolbox.Settings.Documentation.Abstractions;
             
             static class Application
             {
@@ -388,7 +388,7 @@ public class ConfigurationDocumentationAnalyzerCodeFixTests
         const string fixedSource =
             """
             using Microsoft.Extensions.DependencyInjection;
-            using TomsToolbox.Configuration.Documentation.Abstractions;
+            using TomsToolbox.Settings.Documentation.Abstractions;
             using System.ComponentModel;
             
             static class Application
@@ -431,7 +431,7 @@ public class ConfigurationDocumentationAnalyzerCodeFixTests
         const string source =
             """
             using Microsoft.Extensions.DependencyInjection;
-            using TomsToolbox.Configuration.Documentation.Abstractions;
+            using TomsToolbox.Settings.Documentation.Abstractions;
             
             static class Application
             {
@@ -458,7 +458,7 @@ public class ConfigurationDocumentationAnalyzerCodeFixTests
         const string fixedSource =
             """
             using Microsoft.Extensions.DependencyInjection;
-            using TomsToolbox.Configuration.Documentation.Abstractions;
+            using TomsToolbox.Settings.Documentation.Abstractions;
             using System.ComponentModel;
             
             static class Application
@@ -504,7 +504,7 @@ public class ConfigurationDocumentationAnalyzerCodeFixTests
             """
             using Microsoft.Extensions.DependencyInjection;
             using System.Collections.Generic;
-            using TomsToolbox.Configuration.Documentation.Abstractions;
+            using TomsToolbox.Settings.Documentation.Abstractions;
 
             static class Application
             {
@@ -529,7 +529,7 @@ public class ConfigurationDocumentationAnalyzerCodeFixTests
             """
             using Microsoft.Extensions.DependencyInjection;
             using System.Collections.Generic;
-            using TomsToolbox.Configuration.Documentation.Abstractions;
+            using TomsToolbox.Settings.Documentation.Abstractions;
             using System.ComponentModel;
 
             static class Application
@@ -571,7 +571,7 @@ public class ConfigurationDocumentationAnalyzerCodeFixTests
         const string source =
             """
             using Microsoft.Extensions.DependencyInjection;
-            using TomsToolbox.Configuration.Documentation.Abstractions;
+            using TomsToolbox.Settings.Documentation.Abstractions;
 
             static class Application
             {
@@ -599,7 +599,7 @@ public class ConfigurationDocumentationAnalyzerCodeFixTests
         const string fixedSource =
             """
             using Microsoft.Extensions.DependencyInjection;
-            using TomsToolbox.Configuration.Documentation.Abstractions;
+            using TomsToolbox.Settings.Documentation.Abstractions;
 
             static class Application
             {
@@ -644,7 +644,7 @@ public class ConfigurationDocumentationAnalyzerCodeFixTests
         const string source =
             """
             using Microsoft.Extensions.DependencyInjection;
-            using TomsToolbox.Configuration.Documentation.Abstractions;
+            using TomsToolbox.Settings.Documentation.Abstractions;
             using System;
 
             static class Application
@@ -674,7 +674,7 @@ public class ConfigurationDocumentationAnalyzerCodeFixTests
         const string fixedSource =
             """
             using Microsoft.Extensions.DependencyInjection;
-            using TomsToolbox.Configuration.Documentation.Abstractions;
+            using TomsToolbox.Settings.Documentation.Abstractions;
             using System;
 
             static class Application
@@ -721,7 +721,7 @@ public class ConfigurationDocumentationAnalyzerCodeFixTests
         const string source =
             """
             using Microsoft.Extensions.DependencyInjection;
-            using TomsToolbox.Configuration.Documentation.Abstractions;
+            using TomsToolbox.Settings.Documentation.Abstractions;
 
             static class Application
             {
@@ -752,7 +752,7 @@ public class ConfigurationDocumentationAnalyzerCodeFixTests
         const string fixedSource =
             """
             using Microsoft.Extensions.DependencyInjection;
-            using TomsToolbox.Configuration.Documentation.Abstractions;
+            using TomsToolbox.Settings.Documentation.Abstractions;
 
             static class Application
             {
@@ -800,7 +800,7 @@ public class ConfigurationDocumentationAnalyzerCodeFixTests
         const string source =
             """
             using Microsoft.Extensions.DependencyInjection;
-            using TomsToolbox.Configuration.Documentation.Abstractions;
+            using TomsToolbox.Settings.Documentation.Abstractions;
 
             static class Application
             {
@@ -828,7 +828,7 @@ public class ConfigurationDocumentationAnalyzerCodeFixTests
             const string fixedSource =
                 """
                 using Microsoft.Extensions.DependencyInjection;
-                using TomsToolbox.Configuration.Documentation.Abstractions;
+                using TomsToolbox.Settings.Documentation.Abstractions;
 
                 static class Application
                 {
@@ -867,7 +867,7 @@ public class ConfigurationDocumentationAnalyzerCodeFixTests
             await test.RunAsync(TestContext.CancellationToken);
         }
 
-        private sealed class ClassAttributeTest : CSharpCodeFixTest<ConfigurationDocumentationAnalyzer, ConfigurationDocumentationAnalyzerClassAttributeCodeFixProvider, DefaultVerifier>
+        private sealed class ClassAttributeTest : CSharpCodeFixTest<SettingsDocumentationAnalyzer, SettingsDocumentationAnalyzerClassAttributeCodeFixProvider, DefaultVerifier>
     {
         public ClassAttributeTest()
         {
@@ -880,7 +880,7 @@ public class ConfigurationDocumentationAnalyzerCodeFixTests
         }
     }
 
-        private sealed class PropertyAttributeTest : CSharpCodeFixTest<ConfigurationDocumentationAnalyzer, ConfigurationDocumentationAnalyzerPropertyAttributeCodeFixProvider, DefaultVerifier>
+        private sealed class PropertyAttributeTest : CSharpCodeFixTest<SettingsDocumentationAnalyzer, SettingsDocumentationAnalyzerPropertyAttributeCodeFixProvider, DefaultVerifier>
         {
             public PropertyAttributeTest()
             {
@@ -893,7 +893,7 @@ public class ConfigurationDocumentationAnalyzerCodeFixTests
             }
         }
 
-        private sealed class MethodAttributeTest : CSharpCodeFixTest<ConfigurationDocumentationAnalyzer, ConfigurationDocumentationAnalyzerMethodAttributeCodeFixProvider, DefaultVerifier>
+        private sealed class MethodAttributeTest : CSharpCodeFixTest<SettingsDocumentationAnalyzer, SettingsDocumentationAnalyzerMethodAttributeCodeFixProvider, DefaultVerifier>
         {
             public MethodAttributeTest()
             {

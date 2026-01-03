@@ -11,9 +11,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Configuration.Documentation.Analyzer\Configuration.Documentation.Analyzer\Configuration.Documentation.Analyzer.csproj" ReferenceOutputAssembly="false" OutputItemType="Analyzer" />
-    <!--<ProjectReference Include="..\Configuration.Documentation.Analyzer\Configuration.Documentation.Analyzer.CodeFixes\Configuration.Documentation.Analyzer.CodeFixes.csproj" ReferenceOutputAssembly="false" OutputItemType="Analyzer" />-->
-    <ProjectReference Include="..\Configuration.Documentation\Configuration.Documentation.csproj" />
+    <ProjectReference Include="..\Settings.Documentation.Analyzer\Settings.Documentation.Analyzer\Settings.Documentation.Analyzer.csproj" ReferenceOutputAssembly="false" OutputItemType="Analyzer" />
+    <!--<ProjectReference Include="..\Settings.Documentation.Analyzer\Settings.Documentation.Analyzer.CodeFixes\Settings.Documentation.Analyzer.CodeFixes.csproj" ReferenceOutputAssembly="false" OutputItemType="Analyzer" />-->
+    <ProjectReference Include="..\Settings.Documentation\Settings.Documentation.csproj" />
   </ItemGroup>
 
 </Project>
