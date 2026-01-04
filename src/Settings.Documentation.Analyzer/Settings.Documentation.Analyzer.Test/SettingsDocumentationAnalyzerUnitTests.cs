@@ -255,12 +255,14 @@ public class SettingsDocumentationAnalyzerUnitTest
 
 // Reference code:
 #pragma warning disable IDE0051
+#nullable disable
+// ReSharper disable once ExpressionIsAlwaysNull
 
 internal static class Application
 {
     private static void Program()
     {
-        IServiceCollection services = null!;
+        IServiceCollection services = null;
 
         services
             .AddSomeService()

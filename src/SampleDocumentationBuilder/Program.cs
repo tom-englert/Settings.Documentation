@@ -1,4 +1,4 @@
-﻿using TomsToolbox.Settings.Documentation;
+﻿using TomsToolbox.Settings.Documentation.Builder;
 
 var solutionDir = new DirectoryInfo(AppDomain.CurrentDomain.BaseDirectory);
 while (solutionDir.Parent != null && !solutionDir.EnumerateFiles("*.sln*").Any())

@@ -906,5 +906,6 @@ public class SettingsDocumentationAnalyzerCodeFixTests
             }
         }
 
+        // ! Initialized by test framework
         public TestContext TestContext { get; set; } = null!;
     }
