@@ -1,6 +1,6 @@
 ﻿using System.Reflection;
 
-namespace TomsToolbox.Settings.Documentation;
+namespace TomsToolbox.Settings.Documentation.Builder;
 
 /// <summary>
 /// Represents a configuration value associated with a specific section and property, including an optional default value.

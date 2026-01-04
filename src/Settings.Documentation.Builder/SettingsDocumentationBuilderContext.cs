@@ -1,4 +1,4 @@
-﻿namespace TomsToolbox.Settings.Documentation;
+﻿namespace TomsToolbox.Settings.Documentation.Builder;
 
 /// <summary>
 /// Represents the context information required to build documentation for settings.

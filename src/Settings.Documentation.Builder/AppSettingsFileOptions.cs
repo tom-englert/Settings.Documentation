@@ -1,4 +1,4 @@
-﻿namespace TomsToolbox.Settings.Documentation;
+﻿namespace TomsToolbox.Settings.Documentation.Builder;
 
 public class AppSettingsFileOptions
 {

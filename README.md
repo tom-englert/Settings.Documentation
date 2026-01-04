@@ -10,7 +10,7 @@ Automatically generate comprehensive documentation for your .NET application con
 Settings.Documentation is a toolset that helps you maintain clear, accurate documentation of your application's configuration options. It consists of three main packages that work together to provide compile-time validation and runtime documentation generation:
 
 - **Settings.Documentation.Abstractions** - Attributes for marking up configuration classes
-- **Settings.Documentation** - Runtime library for generating documentation
+- **Settings.Documentation.Builder** - Runtime library for generating documentation
 - **Settings.Documentation.Analyzer** - Roslyn analyzer for compile-time validation
 
 ## ✨ Features
@@ -29,7 +29,7 @@ Install the packages via NuGet:
 
 ```bash
 # Core library for documentation generation
-dotnet add package Settings.Documentation
+dotnet add package Settings.Documentation.Builder
 
 # Attributes for marking up configuration classes
 dotnet add package Settings.Documentation.Abstractions
@@ -91,7 +91,7 @@ builder.Services
 Create a console application to generate documentation:
 
 ```csharp
-using TomsToolbox.Settings.Documentation;
+using TomsToolbox.Settings.Documentation.Builder;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -191,12 +191,12 @@ builder.Services
             new AppSettingsFileOptions 
             { 
                 FileName = "appsettings.json", 
-                UpdateDefaults = true 
+                UpdateDefaults = true // Generate default values in this file
             },
             new AppSettingsFileOptions 
             { 
                 FileName = "appsettings.Development.json", 
-                UpdateDefaults = false 
+                UpdateDefaults = false // Only add $schema reference
             }
         };
         
@@ -351,7 +351,7 @@ Add to your `.csproj` to automatically update documentation on build:
 ```
 Configuration.Documentation/
 ├── Settings.Documentation.Abstractions/    # Attribute definitions
-├── Settings.Documentation/                 # Core documentation library
+├── Settings.Documentation.Builder/                 # Core documentation library
 ├── Settings.Documentation.Analyzer/        # Roslyn analyzer
 │   ├── Settings.Documentation.Analyzer/           # Analyzer implementation
 │   ├── Settings.Documentation.Analyzer.CodeFixes/ # Code fix providers

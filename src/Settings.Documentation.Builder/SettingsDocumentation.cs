@@ -12,15 +12,27 @@ using TomsToolbox.Settings.Documentation.Abstractions;
 
 #pragma warning disable CA1305 // Specify IFormatProvider
 
-namespace TomsToolbox.Settings.Documentation;
+namespace TomsToolbox.Settings.Documentation.Builder;
 
 using static System.Web.HttpUtility;
 
+/// <summary>
+/// Provides functionality to generate documentation for application settings from configuration classes.
+/// </summary>
 public static class SettingsDocumentation
 {
     private static readonly HashSet<Type> NumberTypes = [typeof(int), typeof(short), typeof(double), typeof(float)];
     private static readonly JsonSerializerOptions JsonSerializerOptions = CreateSerializerOptions();
 
+    /// <summary>
+    /// Creates a settings documentation builder context from the specified assemblies.
+    /// </summary>
+    /// <param name="assemblies">The assemblies to scan for configuration classes marked with <see cref="SettingsSectionAttribute"/>.</param>
+    /// <param name="configureOptions">An optional action to configure the documentation builder options.</param>
+    /// <returns>A <see cref="SettingsDocumentationBuilderContext"/> containing the discovered settings and configured options.</returns>
+    /// <remarks>
+    /// This method scans all types in the provided assemblies and includes those decorated with <see cref="SettingsSectionAttribute"/>.
+    /// </remarks>
     public static SettingsDocumentationBuilderContext SettingsDocumentationBuilder(Assembly[] assemblies, Action<SettingsDocumentationBuilderOptions>? configureOptions = null)
     {
         var types = assemblies.SelectMany(assembly => assembly.GetTypes())
@@ -30,6 +42,15 @@ public static class SettingsDocumentation
         return SettingsDocumentationBuilder(types, configureOptions);
     }
 
+    /// <summary>
+    /// Creates a settings documentation builder context from configuration options registered in a service collection.
+    /// </summary>
+    /// <param name="serviceCollection">The service collection containing registered configuration options.</param>
+    /// <param name="configureOptions">An optional action to configure the documentation builder options.</param>
+    /// <returns>A <see cref="SettingsDocumentationBuilderContext"/> containing the discovered settings and configured options.</returns>
+    /// <remarks>
+    /// This method extracts configuration types from services registered as <see cref="IConfigureOptions{TOptions}"/> in the service collection.
+    /// </remarks>
     public static SettingsDocumentationBuilderContext SettingsDocumentationBuilder(this IServiceCollection serviceCollection, Action<SettingsDocumentationBuilderOptions>? configureOptions = null)
     {
         var optionsTypeName = typeof(IConfigureOptions<>).Name;
@@ -45,6 +66,21 @@ public static class SettingsDocumentation
         return SettingsDocumentationBuilder(types, configureOptions);
     }
 
+    /// <summary>
+    /// Creates a settings documentation builder context from an array of configuration types.
+    /// </summary>
+    /// <param name="types">The array of types representing configuration classes to document.</param>
+    /// <param name="configureOptions">An optional action to configure the documentation builder options.</param>
+    /// <returns>A <see cref="SettingsDocumentationBuilderContext"/> containing the extracted settings and configured options.</returns>
+    /// <exception cref="InvalidOperationException">
+    /// Thrown when a configuration section cannot be determined for a type and 
+    /// <see cref="SettingsDocumentationBuilderOptions.ThrowOnUnknownSettingsSection"/> is <c>true</c>.
+    /// </exception>
+    /// <remarks>
+    /// This method processes each type to extract its properties as configuration settings. Properties marked with 
+    /// <see cref="SettingsIgnoreAttribute"/> are excluded. Types marked with <see cref="SettingsIgnoreAttribute"/> 
+    /// are also excluded. The method applies the configured type filter and section mapping.
+    /// </remarks>
     public static SettingsDocumentationBuilderContext SettingsDocumentationBuilder(Type[] types, Action<SettingsDocumentationBuilderOptions>? configureOptions = null)
     {
         var values = new List<SettingsValue>();
@@ -84,6 +120,25 @@ public static class SettingsDocumentation
         return new(values, options);
     }
 
+    /// <summary>
+    /// Generates all configured documentation files from the builder context.
+    /// </summary>
+    /// <param name="context">The settings documentation builder context containing values and options.</param>
+    /// <remarks>
+    /// <para>
+    /// This method generates the following files based on the configuration:
+    /// </para>
+    /// <list type="bullet">
+    /// <item><description>JSON schema file (if <see cref="SettingsDocumentationBuilderOptions.GenerateSchema"/> is <c>true</c>)</description></item>
+    /// <item><description>Markdown documentation file (if <see cref="SettingsDocumentationBuilderOptions.GenerateMarkdown"/> is <c>true</c>)</description></item>
+    /// <item><description>HTML documentation file (if <see cref="SettingsDocumentationBuilderOptions.GenerateHtml"/> is <c>true</c>)</description></item>
+    /// <item><description>Updated appsettings files with schema references and default values</description></item>
+    /// </list>
+    /// <para>
+    /// All files are written to the directory specified by <see cref="SettingsDocumentationBuilderOptions.TargetDirectory"/>.
+    /// The target directory is created if it does not exist.
+    /// </para>
+    /// </remarks>
     public static void GenerateDocumentation(this SettingsDocumentationBuilderContext context)
     {
         var options = context.Options;
@@ -303,20 +358,22 @@ public static class SettingsDocumentation
 
     private static string CreateHtmlDocumentation(IEnumerable<IGrouping<string, SettingsValue>> valuesBySection)
     {
-        const string header = @"<!DOCTYPE html>
-<html lang=""en"">
-<head>
-    <title>Vita Configuration Settings</title>
-    <style>
-    body { font-family: sans-serif; } 
-    h3 { margin-left: 1em; }
-    h4 { margin: 0 0 0 2em; }
-    ul { margin-left: 1em; }
-    li { padding: 0.2em; }
-    </style>
-</head>
-<body>
-";
+        const string header = """
+                              <!DOCTYPE html>
+                              <html lang="en">
+                              <head>
+                                  <title>Vita Configuration Settings</title>
+                                  <style>
+                                  body { font-family: sans-serif; } 
+                                  h3 { margin-left: 1em; }
+                                  h4 { margin: 0 0 0 2em; }
+                                  ul { margin-left: 1em; }
+                                  li { padding: 0.2em; }
+                                  </style>
+                              </head>
+                              <body>
+                              
+                              """;
 
         var text = new StringBuilder(header)
             .AppendLine("<h2>Configuration Settings</h2>");
