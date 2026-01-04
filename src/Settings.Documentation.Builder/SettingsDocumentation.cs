@@ -58,7 +58,7 @@ public static class SettingsDocumentation
             if (configClass.GetCustomAttribute<SettingsIgnoreAttribute>() is not null)
                 continue;
 
-            var section = configClass.GetSection() ?? options.SectionMapping(configClass);
+            var section = options.SectionMapping(configClass) ?? configClass.GetSection();
 
             if (string.IsNullOrEmpty(section))
             {

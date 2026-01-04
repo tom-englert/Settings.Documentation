@@ -1,4 +1,4 @@
-# TomsToolbox.Settings.Documentation
+# TomsToolbox.Settings.Documentation.Builder
 
 Automatically generate documentation for your .NET application configuration settings.
 
