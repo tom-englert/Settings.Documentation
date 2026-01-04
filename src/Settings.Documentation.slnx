@@ -2,7 +2,7 @@
   <Folder Name="/Solution Items/">
     <File Path=".editorconfig" />
     <File Path="Directory.build.props" />
-    <File Path="README.md" />
+    <File Path="../README.md" />
   </Folder>
   <Project Path="Settings.Documentation.Abstractions/Settings.Documentation.Abstractions.csproj" Id="f65386bb-792e-4d7a-b19e-572fafd56b81" />
   <Project Path="Settings.Documentation.Analyzer/Settings.Documentation.Analyzer.CodeFixes/Settings.Documentation.Analyzer.CodeFixes.csproj" Id="53b576ee-b8d8-4228-b2c1-00e8b2550655" />
