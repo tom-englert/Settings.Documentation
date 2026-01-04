@@ -2,7 +2,7 @@
   <Folder Name="/Solution Items/">
     <File Path=".editorconfig" />
     <File Path="Directory.build.props" />
-    <File Path="../appveyor.yml" />
+    <File Path="../.github/workflows/build-and-publish.yml" />
     <File Path="../README.md" />
   </Folder>
   <Project Path="Settings.Documentation.Abstractions/Settings.Documentation.Abstractions.csproj" Id="f65386bb-792e-4d7a-b19e-572fafd56b81" />
