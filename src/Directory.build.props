@@ -1,17 +1,38 @@
 <Project>
   <PropertyGroup>
-    <Version>1.0.0</Version>
-    <SemanticVersion>$(Version)-beta1</SemanticVersion>
-    <PackageVersion>$(SemanticVersion)</PackageVersion>
-    <Copyright>(c) tom-englert.de and contributors</Copyright>
+    <Version>1.0.0-beta1</Version>
+
+    <Authors>Tom Englert</Authors>
+    <Company>tom-englert.de</Company>
+    <Copyright>© 2026 tom-englert.de and contributors</Copyright>
+    <Product>Tom's Toolbox</Product>
+    <Description>Automatically generate comprehensive documentation for your .NET application configuration settings. Keep your 'appsettings.json' files documented, validated, and always up-to-date with JSON schemas, Markdown, and HTML documentation.</Description>
+    <PackageLicenseFile>LICENSE</PackageLicenseFile>
+    <PackageIcon>Icon.png</PackageIcon>
+    <PackageTags>Settings, Configuration, Documentation</PackageTags>
+    <PackageProjectUrl>https://github.com/tom-englert/Settings.Documentation</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/tom-englert/Settings.Documentation.git</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <DebugType>embedded</DebugType>
+    <DebugSymbols>true</DebugSymbols>
   </PropertyGroup>
 
   <PropertyGroup>
     <LangVersion>14.0</LangVersion>
-	  <Nullable>enable</Nullable>
-	  <ImplicitUsings>enable</ImplicitUsings>
-	  <RootNamespace>TomsToolbox.$(MSBuildProjectName)</RootNamespace>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <RootNamespace>TomsToolbox.$(MSBuildProjectName)</RootNamespace>
     <PackageId>$(RootNamespace)</PackageId>
-	</PropertyGroup>
+    <PackageOutputPath>$(MSBuildThisFileDirectory)..\Deploy</PackageOutputPath>
+  </PropertyGroup>
 
+  <ItemGroup>
+    <PackageReference Include="Microsoft.SourceLink.GitHub" Version="8.0.0" PrivateAssets="All" />
+    <PackageReference Include="Nullable.Extended.Analyzer" Version="1.15.6581" PrivateAssets="All" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="$(MSBuildThisFileDirectory)Icon.png" Link="Icon.png" Pack="true" PackagePath="\" />
+    <None Include="$(MSBuildThisFileDirectory)../LICENSE" Link="LICENSE" Pack="true" PackagePath="\" />
+  </ItemGroup>
 </Project>
