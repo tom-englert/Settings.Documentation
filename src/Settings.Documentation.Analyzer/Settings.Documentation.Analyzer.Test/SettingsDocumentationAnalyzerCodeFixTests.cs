@@ -1,4 +1,5 @@
-﻿using Microsoft.CodeAnalysis.CSharp.Testing;
+﻿using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp.Testing;
 using Microsoft.CodeAnalysis.Testing;
 
 using TomsToolbox.Settings.Documentation.Abstractions;
@@ -825,51 +826,53 @@ public class SettingsDocumentationAnalyzerCodeFixTests
             }
             """;
 
-            const string fixedSource =
-                """
-                using Microsoft.Extensions.DependencyInjection;
-                using TomsToolbox.Settings.Documentation.Abstractions;
+        const string fixedSource =
+            """
+            using Microsoft.Extensions.DependencyInjection;
+            using TomsToolbox.Settings.Documentation.Abstractions;
 
-                static class Application
-                {
-                    static void Program()
-                    {
-                        IServiceCollection services = null!;
-                        services.AddMyOptions<MyOptions>();
-                    }
-
-                    [SettingsAddOptionsInvocator]
-                    static IServiceCollection AddMyOptions<T>(this IServiceCollection services) where T : class
-                    {
-                        services.AddOptions<T>();
-                        return services;
-                    }
-                }
-
-                [SettingsSection]
-                public class MyOptions
-                {
-                    [System.ComponentModel.Description("The port used to connect to the host")]
-                    public int Port { get; init; } = 99;
-                }
-                """;
-
-            var test = new MethodAttributeTest
+            static class Application
             {
-                TestCode = source,
-                FixedCode = fixedSource,
-                ExpectedDiagnostics =
+                static void Program()
+                {
+                    IServiceCollection services = null!;
+                    services.AddMyOptions<MyOptions>();
+                }
+
+                [SettingsAddOptionsInvocator]
+                static IServiceCollection AddMyOptions<T>(this IServiceCollection services) where T : class
+                {
+                    services.AddOptions<T>();
+                    return services;
+                }
+            }
+
+            [SettingsSection]
+            public class MyOptions
+            {
+                [System.ComponentModel.Description("The port used to connect to the host")]
+                public int Port { get; init; } = 99;
+            }
+            """;
+
+        var test = new MethodAttributeTest
+        {
+            TestCode = source,
+            FixedCode = fixedSource,
+            ExpectedDiagnostics =
                 {
                     Diagnostics.MissingInvocatorAttribute.AsResult().WithArguments("AddMyOptions").WithLocation(0)
                 }
-            };
+        };
 
-            await test.RunAsync(TestContext.CancellationToken);
-        }
+        await test.RunAsync(TestContext.CancellationToken);
+    }
 
-        private sealed class ClassAttributeTest : CSharpCodeFixTest<SettingsDocumentationAnalyzer, SettingsDocumentationAnalyzerClassAttributeCodeFixProvider, DefaultVerifier>
+    private abstract class CodeFixTestBase<TAnalyzer, TCodeFix> : CSharpCodeFixTest<TAnalyzer, TCodeFix, DefaultVerifier>
+        where TAnalyzer : Microsoft.CodeAnalysis.Diagnostics.DiagnosticAnalyzer, new()
+        where TCodeFix : Microsoft.CodeAnalysis.CodeFixes.CodeFixProvider, new()
     {
-        public ClassAttributeTest()
+        protected CodeFixTestBase()
         {
             CodeFixTestBehaviors = CodeFixTestBehaviors.SkipLocalDiagnosticCheck | CodeFixTestBehaviors.FixOne;
             ReferenceAssemblies = ReferenceAssemblies.Net.Net80.AddPackages([
@@ -878,34 +881,35 @@ public class SettingsDocumentationAnalyzerCodeFixTests
 
             this.AddReferences(typeof(SettingsSectionAttribute).Assembly);
         }
+
+        //public new string TestCode
+        //{
+        //    set => base.TestCode = NormalizeLineEndings(value);
+        //}
+
+        //public new string FixedCode
+        //{
+        //    set => base.FixedCode = NormalizeLineEndings(value);
+        //}
+
+        //private static string NormalizeLineEndings(string value)
+        //{
+        //    return value.Replace("\r\n", "\n").Replace("\n", Environment.NewLine);
+        //}
     }
 
-        private sealed class PropertyAttributeTest : CSharpCodeFixTest<SettingsDocumentationAnalyzer, SettingsDocumentationAnalyzerPropertyAttributeCodeFixProvider, DefaultVerifier>
-        {
-            public PropertyAttributeTest()
-            {
-                CodeFixTestBehaviors = CodeFixTestBehaviors.SkipLocalDiagnosticCheck | CodeFixTestBehaviors.FixOne;
-                ReferenceAssemblies = ReferenceAssemblies.Net.Net80.AddPackages([
-                    new("Microsoft.Extensions.Options.ConfigurationExtensions", "10.0.1")
-                ]);
-
-                this.AddReferences(typeof(SettingsSectionAttribute).Assembly);
-            }
-        }
-
-        private sealed class MethodAttributeTest : CSharpCodeFixTest<SettingsDocumentationAnalyzer, SettingsDocumentationAnalyzerMethodAttributeCodeFixProvider, DefaultVerifier>
-        {
-            public MethodAttributeTest()
-            {
-                CodeFixTestBehaviors = CodeFixTestBehaviors.SkipLocalDiagnosticCheck | CodeFixTestBehaviors.FixOne;
-                ReferenceAssemblies = ReferenceAssemblies.Net.Net80.AddPackages([
-                    new("Microsoft.Extensions.Options.ConfigurationExtensions", "10.0.1")
-                ]);
-
-                this.AddReferences(typeof(SettingsSectionAttribute).Assembly);
-            }
-        }
-
-        // ! Initialized by test framework
-        public TestContext TestContext { get; set; } = null!;
+    private sealed class ClassAttributeTest : CodeFixTestBase<SettingsDocumentationAnalyzer, SettingsDocumentationAnalyzerClassAttributeCodeFixProvider>
+    {
     }
+
+    private sealed class PropertyAttributeTest : CodeFixTestBase<SettingsDocumentationAnalyzer, SettingsDocumentationAnalyzerPropertyAttributeCodeFixProvider>
+    {
+    }
+
+    private sealed class MethodAttributeTest : CodeFixTestBase<SettingsDocumentationAnalyzer, SettingsDocumentationAnalyzerMethodAttributeCodeFixProvider>
+    {
+    }
+
+    // ! Initialized by test framework
+    public TestContext TestContext { get; set; } = null!;
+}

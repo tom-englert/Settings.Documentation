@@ -22,10 +22,10 @@ public static class CodeFixProviderHelper
         switch (memberDeclaration)
         {
             case PropertyDeclarationSyntax:
-                newAttributeList = newAttributeList.WithTrailingTrivia(SyntaxFactory.CarriageReturnLineFeed);
+                newAttributeList = newAttributeList.WithTrailingTrivia(NewLine());
                 break;
             case TypeDeclarationSyntax or MethodDeclarationSyntax when memberDeclaration.AttributeLists.Count == 0:
-                newAttributeList = newAttributeList.WithLeadingTrivia(SyntaxFactory.CarriageReturnLineFeed);
+                newAttributeList = newAttributeList.WithLeadingTrivia(NewLine());
                 break;
         }
 
@@ -54,7 +54,7 @@ public static class CodeFixProviderHelper
             return newRoot;
 
         var newUsingDirective = SyntaxFactory.UsingDirective(SyntaxFactory.ParseName(attributeNamespace))
-            .WithTrailingTrivia(SyntaxFactory.CarriageReturnLineFeed)
+            .WithTrailingTrivia(NewLine())
             .WithAdditionalAnnotations(Formatter.Annotation);
 
         var usings = compilationUnit.Usings
@@ -63,5 +63,10 @@ public static class CodeFixProviderHelper
         newRoot = compilationUnit.WithUsings(usings);
 
         return newRoot;
+    }
+
+    private static SyntaxTrivia NewLine()
+    {
+        return SyntaxFactory.EndOfLine(Environment.NewLine);
     }
 }
