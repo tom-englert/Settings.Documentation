@@ -11,8 +11,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Settings.Documentation.Analyzer\Settings.Documentation.Analyzer\Settings.Documentation.Analyzer.csproj" ReferenceOutputAssembly="false" OutputItemType="Analyzer" />
-    <ProjectReference Include="..\Settings.Documentation.Builder\Settings.Documentation.Builder.csproj" />
+    <ProjectReference Include="../Settings.Documentation.Analyzer/Settings.Documentation.Analyzer/Settings.Documentation.Analyzer.csproj" ReferenceOutputAssembly="false" OutputItemType="Analyzer" />
+    <ProjectReference Include="../Settings.Documentation.Builder/Settings.Documentation.Builder.csproj" />
   </ItemGroup>
 
 </Project>

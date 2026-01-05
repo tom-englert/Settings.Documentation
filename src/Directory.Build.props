@@ -23,7 +23,6 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <RootNamespace>TomsToolbox.$(MSBuildProjectName)</RootNamespace>
     <PackageId>$(RootNamespace)</PackageId>
-    <!--<PackageOutputPath>$(MSBuildThisFileDirectory)..\Deploy</PackageOutputPath>-->
   </PropertyGroup>
 
   <ItemGroup>

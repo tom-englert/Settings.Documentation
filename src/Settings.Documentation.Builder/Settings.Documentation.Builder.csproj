@@ -16,7 +16,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<ProjectReference Include="..\Settings.Documentation.Abstractions\Settings.Documentation.Abstractions.csproj" />
+		<ProjectReference Include="../Settings.Documentation.Abstractions/Settings.Documentation.Abstractions.csproj" />
 	</ItemGroup>
 
 

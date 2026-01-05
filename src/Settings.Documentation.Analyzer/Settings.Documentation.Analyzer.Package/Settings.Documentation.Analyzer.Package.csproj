@@ -20,14 +20,14 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Settings.Documentation.Analyzer.CodeFixes\Settings.Documentation.Analyzer.CodeFixes.csproj" />
-    <ProjectReference Include="..\Settings.Documentation.Analyzer\Settings.Documentation.Analyzer.csproj" />
+    <ProjectReference Include="../Settings.Documentation.Analyzer.CodeFixes/Settings.Documentation.Analyzer.CodeFixes.csproj" />
+    <ProjectReference Include="../Settings.Documentation.Analyzer/Settings.Documentation.Analyzer.csproj" />
   </ItemGroup>
 
   <Target Name="_AddAnalyzersToOutput">
     <ItemGroup>
-      <TfmSpecificPackageFile Include="$(OutputPath)\Settings.Documentation.Analyzer.dll" PackagePath="analyzers/dotnet/cs" />
-      <TfmSpecificPackageFile Include="$(OutputPath)\Settings.Documentation.Analyzer.CodeFixes.dll" PackagePath="analyzers/dotnet/cs" />
+      <TfmSpecificPackageFile Include="$(OutputPath)/Settings.Documentation.Analyzer.dll" PackagePath="analyzers/dotnet/cs" />
+      <TfmSpecificPackageFile Include="$(OutputPath)/Settings.Documentation.Analyzer.CodeFixes.dll" PackagePath="analyzers/dotnet/cs" />
     </ItemGroup>
   </Target>
 
