@@ -10,8 +10,6 @@ using Microsoft.Extensions.Options;
 
 using TomsToolbox.Settings.Documentation.Abstractions;
 
-#pragma warning disable CA1305 // Specify IFormatProvider
-
 namespace TomsToolbox.Settings.Documentation.Builder;
 
 using static System.Web.HttpUtility;
@@ -89,7 +87,7 @@ public static class SettingsDocumentation
 
         configureOptions?.Invoke(options);
 
-        foreach (var configClass in types.Where(options.TypeFilter))
+        foreach (var configClass in types)
         {
             if (configClass.GetCustomAttribute<SettingsIgnoreAttribute>() is not null)
                 continue;
@@ -98,7 +96,7 @@ public static class SettingsDocumentation
 
             if (string.IsNullOrEmpty(section))
             {
-                if (options.ThrowOnUnknownSettingsSection)
+                if (options.TypeFilter(configClass) && options.ThrowOnUnknownSettingsSection)
                 {
                     throw new InvalidOperationException($"Unable to get the section for {configClass}; Define a custom section mapping, exclude this type or switch of {nameof(SettingsDocumentationBuilderOptions.ThrowOnUnknownSettingsSection)}");
                 }
@@ -166,7 +164,7 @@ public static class SettingsDocumentation
         foreach (var appSettingsFile in options.AppSettingsFiles)
         {
             var appSettingsPath = Path.Combine(targetDirectory, appSettingsFile.FileName);
-            var appSettings = ReadAppSettings(appSettingsPath) ?? new JsonObject();
+            var appSettings = ReadAppSettings(appSettingsPath) ?? [];
 
             if (UpdateSettings(valuesBySection, appSettings, options.AppSettingsSchemaFileName, appSettingsFile.UpdateDefaults, options.GenerateSchema))
             {
@@ -307,38 +305,38 @@ public static class SettingsDocumentation
         return JsonValue.Create(value);
     }
 
+    static void AddMarkdownPropertyDocumentation(IEnumerable<SettingsValue> values, StringBuilder text)
+    {
+        foreach (var value in values)
+        {
+            var property = value.Property;
+            var name = property.Name;
+            var propertyType = property.PropertyType;
+            var settingsType = propertyType.GetSettingsTypeName();
+
+            text.AppendLine($"### {name}")
+                .AppendLine($"  - type: {settingsType}");
+
+            if (propertyType.IsEnum)
+            {
+                text.AppendLine($"  - values: {string.Join(", ", Enum.GetNames(propertyType))}");
+            }
+
+            var defaultValue = value.IsSecret() ? "*****" : value.DefaultValue;
+            text.AppendLine($"  - default: {defaultValue}");
+
+            var description = property.GetDescription();
+            if (!string.IsNullOrEmpty(description))
+            {
+                text.AppendLine($"  - description: {description}");
+            }
+        }
+    }
+
     private static string CreateMarkdownDocumentation(IEnumerable<IGrouping<string, SettingsValue>> valuesBySection)
     {
         var text = new StringBuilder()
             .AppendLine("# Configuration Settings");
-
-        static void AddPropertyDocumentation(IEnumerable<SettingsValue> values, StringBuilder text)
-        {
-            foreach (var value in values)
-            {
-                var property = value.Property;
-                var name = property.Name;
-                var propertyType = property.PropertyType;
-                var settingsType = propertyType.GetSettingsTypeName();
-
-                text.AppendLine($"### {name}")
-                    .AppendLine($"  - type: {settingsType}");
-
-                if (propertyType.IsEnum)
-                {
-                    text.AppendLine($"  - values: {string.Join(", ", Enum.GetNames(propertyType))}");
-                }
-
-                var defaultValue = value.IsSecret() ? "*****" : value.DefaultValue;
-                text.AppendLine($"  - default: {defaultValue}");
-
-                var description = property.GetDescription();
-                if (!string.IsNullOrEmpty(description))
-                {
-                    text.AppendLine($"  - description: {description}");
-                }
-            }
-        }
 
         foreach (var sectionValues in valuesBySection)
         {
@@ -350,10 +348,42 @@ public static class SettingsDocumentation
 
             text.AppendLine($"## {section}");
 
-            AddPropertyDocumentation(values, text);
+            AddMarkdownPropertyDocumentation(values, text);
         }
 
         return text.ToString();
+    }
+
+    static void AddHtmlPropertyDocumentation(IEnumerable<SettingsValue> configurationValues, StringBuilder text)
+    {
+        foreach (var value in configurationValues)
+        {
+            var property = value.Property;
+            var key = property.Name;
+            var propertyType = property.PropertyType;
+            var settingsType = propertyType.GetSettingsTypeName();
+
+
+            text.AppendLine($"<h4>{HtmlEncode(key)}</h4>")
+                .AppendLine("<ul>")
+                .AppendLine($"<li>type: {HtmlEncode(settingsType)}</li>");
+
+            if (propertyType.IsEnum)
+            {
+                text.AppendLine($"<li>values: {HtmlEncode(string.Join(", ", Enum.GetNames(propertyType)))}</li>");
+            }
+
+            var defaultValue = value.IsSecret() ? "*****" : value.DefaultValue;
+            text.AppendLine($"<li>default: {HtmlEncode(defaultValue)}</li>");
+
+            var description = property.GetDescription();
+            if (!string.IsNullOrEmpty(description))
+            {
+                text.AppendLine($"<li>description: {HtmlEncode(description)}</li>");
+            }
+
+            text.AppendLine("</ul>");
+        }
     }
 
     private static string CreateHtmlDocumentation(IEnumerable<IGrouping<string, SettingsValue>> valuesBySection)
@@ -378,38 +408,6 @@ public static class SettingsDocumentation
         var text = new StringBuilder(header)
             .AppendLine("<h2>Configuration Settings</h2>");
 
-        static void AddPropertyDocumentation(IEnumerable<SettingsValue> configurationValues, StringBuilder text)
-        {
-            foreach (var value in configurationValues)
-            {
-                var property = value.Property;
-                var key = property.Name;
-                var propertyType = property.PropertyType;
-                var settingsType = propertyType.GetSettingsTypeName();
-
-
-                text.AppendLine($"<h4>{HtmlEncode(key)}</h4>")
-                    .AppendLine("<ul>")
-                    .AppendLine($"<li>type: {HtmlEncode(settingsType)}</li>");
-
-                if (propertyType.IsEnum)
-                {
-                    text.AppendLine($"<li>values: {HtmlEncode(string.Join(", ", Enum.GetNames(propertyType)))}</li>");
-                }
-
-                var defaultValue = value.IsSecret() ? "*****" : value.DefaultValue;
-                text.AppendLine($"<li>default: {HtmlEncode(defaultValue)}</li>");
-
-                var description = property.GetDescription();
-                if (!string.IsNullOrEmpty(description))
-                {
-                    text.AppendLine($"<li>description: {HtmlEncode(description)}</li>");
-                }
-
-                text.AppendLine("</ul>");
-            }
-        }
-
         foreach (var valueSection in valuesBySection)
         {
             var section = valueSection.Key;
@@ -420,7 +418,7 @@ public static class SettingsDocumentation
 
             text.AppendLine($"<h3>{HtmlEncode(section)}</h3>");
 
-            AddPropertyDocumentation(values, text);
+            AddHtmlPropertyDocumentation(values, text);
         }
 
         text.AppendLine("</body>")

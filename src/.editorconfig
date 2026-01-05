@@ -139,3 +139,6 @@ csharp_prefer_braces = when_multiline
 [*.cs]
 
 # dotnet_analyzer_diagnostic.severity = error
+
+# IDE0046: Convert to conditional expression
+dotnet_diagnostic.IDE0046.severity = silent

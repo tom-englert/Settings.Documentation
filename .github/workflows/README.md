@@ -40,7 +40,7 @@ This workflow builds the solution, runs tests, and publishes NuGet packages.
    - Click "New repository secret"
    - Name: `NUGET_API_KEY`
    - Value: Your NuGet API key
-3. Push to main or create a version tag to trigger publishing
+3. Create a version tag to trigger publishing
 
 ### Version Management
 Versions are controlled by the `<Version>` property in `Directory.build.props`.
