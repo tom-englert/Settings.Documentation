@@ -9,9 +9,9 @@ Automatically generate comprehensive documentation for your .NET application con
 
 Settings.Documentation is a toolset that helps you maintain clear, accurate documentation of your application's configuration options. It consists of three main packages that work together to provide compile-time validation and runtime documentation generation:
 
-- **Settings.Documentation.Abstractions** - Attributes for marking up configuration classes
-- **Settings.Documentation.Builder** - Runtime library for generating documentation
-- **Settings.Documentation.Analyzer** - Roslyn analyzer for compile-time validation
+- **TomsToolbox.Settings.Documentation.Abstractions** - Attributes for marking up configuration classes
+- **TomsToolbox.Settings.Documentation.Builder** - Runtime library for generating documentation
+- **TomsToolbox.Settings.Documentation.Analyzer** - Roslyn analyzer for compile-time validation
 
 ## ✨ Features
 
@@ -29,13 +29,13 @@ Install the packages via NuGet:
 
 ```bash
 # Core library for documentation generation
-dotnet add package Settings.Documentation.Builder
+dotnet add package TomsToolbox.Settings.Documentation.Builder
 
 # Attributes for marking up configuration classes
-dotnet add package Settings.Documentation.Abstractions
+dotnet add package TomsToolbox.Settings.Documentation.Abstractions
 
 # Optional: Roslyn analyzer for compile-time validation
-dotnet add package Settings.Documentation.Analyzer
+dotnet add package TomsToolbox.Settings.Documentation.Analyzer
 ```
 
 ## 🚀 Quick Start
