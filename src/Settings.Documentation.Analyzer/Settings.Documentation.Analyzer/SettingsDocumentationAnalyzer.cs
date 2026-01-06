@@ -41,9 +41,9 @@ namespace TomsToolbox.Settings.Documentation.Analyzer
             if (symbolInfo.Symbol is not IMethodSymbol methodSymbol)
                 return;
 
-            if (genericName.Identifier.Text != "AddOptions")
+            if (!string.Equals(genericName.Identifier.Text, "AddOptions", StringComparison.Ordinal))
             {
-                if (!methodSymbol.GetAttributes().Any(attr => attr.AttributeClass?.Name.StartsWith("SettingsAddOptionsInvocator") == true))
+                if (!methodSymbol.GetAttributes().Any(attr => attr.AttributeClass?.Name.StartsWith("SettingsAddOptionsInvocator", StringComparison.Ordinal) == true))
                     return;
             }
             else

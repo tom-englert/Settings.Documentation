@@ -98,13 +98,17 @@ public static class SettingsDocumentation
             {
                 if (options.TypeFilter(configClass) && options.ThrowOnUnknownSettingsSection)
                 {
-                    throw new InvalidOperationException($"Unable to get the section for {configClass}; Define a custom section mapping, exclude this type or switch of {nameof(SettingsDocumentationBuilderOptions.ThrowOnUnknownSettingsSection)}");
+                    throw new InvalidOperationException($"Unable to get the section for {configClass}; Define a custom section mapping, exclude this type or switch off {nameof(SettingsDocumentationBuilderOptions.ThrowOnUnknownSettingsSection)}");
                 }
 
                 continue;
             }
 
             var defaultInstance = Activator.CreateInstance(configClass);
+            if (defaultInstance == null)
+            {
+                throw new InvalidOperationException($"Unable to create instance of {configClass}. Ensure the type has a parameterless constructor.");
+            }
 
             var configurationValues = configClass
                 .GetProperties()
@@ -146,7 +150,7 @@ public static class SettingsDocumentation
 
         Directory.CreateDirectory(targetDirectory);
 
-        if (options.GenerateSchema)
+        if (options.GenerateMarkdown)
         {
             File.WriteAllText(Path.Combine(targetDirectory, options.AppSettingsMarkdownFileName), CreateMarkdownDocumentation(valuesBySection));
         }
@@ -156,7 +160,7 @@ public static class SettingsDocumentation
             File.WriteAllText(Path.Combine(targetDirectory, options.AppSettingsHtmlFileName), CreateHtmlDocumentation(valuesBySection));
         }
 
-        if (options.GenerateMarkdown)
+        if (options.GenerateSchema)
         {
             File.WriteAllText(Path.Combine(targetDirectory, options.AppSettingsSchemaFileName), CreateSchema(valuesBySection));
         }
@@ -392,7 +396,7 @@ public static class SettingsDocumentation
                               <!DOCTYPE html>
                               <html lang="en">
                               <head>
-                                  <title>Vita Configuration Settings</title>
+                                  <title>Configuration Settings</title>
                                   <style>
                                   body { font-family: sans-serif; } 
                                   h3 { margin-left: 1em; }
@@ -452,11 +456,12 @@ public static class SettingsDocumentation
     private static string GetSettingsTypeName(this Type propertyType)
     {
         if (NumberTypes.Contains(propertyType))
-        {
-            return propertyType == typeof(bool) ? "boolean" : "number";
-        }
+            return "number";
 
-        return propertyType == typeof(bool) ? "boolean" : "string";
+        if (propertyType == typeof(bool))
+            return "boolean";
+
+        return "string";
     }
 
     private static bool IsSecret(this SettingsValue value)
@@ -478,9 +483,9 @@ public static class SettingsDocumentation
                 return JsonNode.Parse(File.ReadAllText(path)) as JsonObject;
             }
         }
-        catch
+        catch (Exception ex)
         {
-            // unable to load/parse file, go with default
+            throw new InvalidOperationException($"Unable to read appsettings from {path}", ex);
         }
 
         return null;

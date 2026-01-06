@@ -84,8 +84,8 @@ public class SettingsDocumentationBuilderOptions
     /// Default is <c>true</c>.
     /// </summary>
     /// <remarks>
-    /// When <c>true</c>, the builder will throw an exception if it finds a configuration section in the appsettings files
-    /// that doesn't correspond to a known settings class. When <c>false</c>, unknown sections are ignored.
+    /// When <c>true</c>, the builder will throw an exception if it finds a configuration class where it cannot determine the corresponding section name.
+    /// When <c>false</c>, unknown sections are ignored.
     /// </remarks>
     public bool ThrowOnUnknownSettingsSection { get; set; } = true;
 }
