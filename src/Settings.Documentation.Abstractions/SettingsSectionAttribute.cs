@@ -8,5 +8,8 @@
 [AttributeUsage(AttributeTargets.Class, Inherited = false)]
 public class SettingsSectionAttribute(string? sectionName = null) : Attribute
 {
+    /// <summary>
+    /// The name of the configuration section to associate with the class. If null, a default section name will be used.
+    /// </summary>
     public string? SectionName { get; } = sectionName;
 }
