@@ -1,6 +1,6 @@
 ﻿# Settings.Documentation
 
-[![NuGet](https://img.shields.io/nuget/v/Settings.Documentation.svg)](https://www.nuget.org/packages/Settings.Documentation/)
+[![NuGet](https://img.shields.io/nuget/v/TomsToolbox.Settings.Documentation.Builder.svg)](https://www.nuget.org/packages/TomsToolbox.Settings.Documentation.Builder/)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
 Automatically generate comprehensive documentation for your .NET application configuration settings. Keep your `appsettings.json` files documented, validated, and always up-to-date with JSON schemas, Markdown, and HTML documentation.
@@ -60,11 +60,11 @@ public class MyAppSettings
     public string Host { get; init; } = "localhost";
 }
 
-[SettingsSection]
+[SettingsSection("ConnectionStrings")]
 public class DatabaseSettings
 {
     [Description("The database connection string")]
-    public string ConnectionString { get; init; } = "Server=.;Database=MyDb;";
+    public string DatabaseConnectionString { get; init; } = "Server=.;Database=MyDb;";
 
     [Description("The database password")]
     [SettingsSecret]  // Masks the value in documentation
@@ -102,7 +102,7 @@ ConfigureServices(builder.Services);
 builder.Services
     .SettingsDocumentationBuilder(options =>
     {
-        options.TargetDirectory = "./docs";
+        options.TargetDirectory = ".";
         options.GenerateSchema = true;
         options.GenerateMarkdown = true;
         options.GenerateHtml = true;
@@ -117,7 +117,7 @@ The documentation generator will create:
 - `appsettings.schema.json` - JSON schema for IntelliSense
 - `appsettings.md` - Markdown documentation
 - `appsettings.html` - HTML documentation
-- Updated `appsettings.json` with schema reference and default values
+- Updated `appsettings.json` with schema reference and optional seed with default values
 
 ## 📖 Available Attributes
 
@@ -340,9 +340,9 @@ All diagnostics include automatic code fixes!
 Add to your `.csproj` to automatically update documentation on build:
 
 ```xml
-<Target Name="UpdateDocumentation" AfterTargets="Build">
+<Target Name="UpdateSettingsDocumentation" AfterTargets="Build">
   <Message Importance="high" Text="Updating documentation files..." />
-  <Exec Command="dotnet &quot;$(TargetPath)&quot;" WorkingDirectory="$(ProjectDir)" />
+  <Exec Command="dotnet &quot;$(TargetPath)&quot;" WorkingDirectory="$(SolutionDir)/TargetProject" />
 </Target>
 ```
 
@@ -394,6 +394,8 @@ Clean, readable documentation:
 Contributions are welcome! Please feel free to submit issues or pull requests.
 
 ## 📄 License
+
+MIT License
 
 This project is part of the TomsToolbox library suite.
 

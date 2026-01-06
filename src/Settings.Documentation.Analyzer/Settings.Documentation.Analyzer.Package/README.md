@@ -46,8 +46,8 @@ The analyzer is automatically integrated into your build process and provides re
 
 ## Related Packages
 
-- **TomsToolbox.Settings.Documentation.Builder** - Runtime library for generating documentation
 - **TomsToolbox.Settings.Documentation.Abstractions** - Attribute definitions
+- **TomsToolbox.Settings.Documentation.Builder** - Runtime library for generating documentation
 
 For more information, see the main repository documentation.
 

@@ -60,6 +60,11 @@ public static void CustomAddOptions<T>(IServiceCollection services)
 
 - .NET Standard 2.1 or higher
 
+## Related Packages
+
+- **TomsToolbox.Settings.Documentation.Builder** - Runtime library for generating documentation
+- **TomsToolbox.Settings.Documentation.Analyzer** - Roslyn analyzer for compile-time validation
+
 ## License
 
 MIT License
