@@ -32,7 +32,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Nullable.Extended.Analyzer" Version="1.15.6581" PrivateAssets="All" />
+    <GlobalPackageReference Include="Nullable.Extended.Analyzer" Version="1.15.6581" />
   </ItemGroup>
 
   <ItemGroup>
