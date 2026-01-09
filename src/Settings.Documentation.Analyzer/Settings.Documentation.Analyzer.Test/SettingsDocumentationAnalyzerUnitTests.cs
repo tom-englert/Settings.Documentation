@@ -148,29 +148,29 @@ public class SettingsDocumentationAnalyzerUnitTest
         const string source =
             """
             using Microsoft.Extensions.DependencyInjection;
-            
+
             static class Application
             {
                 static void Program()
                 {
                     IServiceCollection services = null!;
-            
+
                     services
                         .CustomAddOptions<MyOptions>();
                 }
-            
-                static IServiceCollection {|#0:CustomAddOptions|}<T>(this IServiceCollection services) where T : class
+
+                static IServiceCollection CustomAddOptions<T>(this IServiceCollection services) where T : class
                 {
-                    services.AddOptions<T>()
+                    services.{|#0:AddOptions<T>|}()
                         .BindConfiguration(typeof(T).Name);
 
                     return services;
                 }
             }
-            
+
             public class MyOptions
             {
-                public int {|#1:Port|} { get; init; } = 99;
+                public int Port { get; init; } = 99;
                 [System.ComponentModel.Description("The host ulr running the service")]
                 public string Host { get; init; } = "localhost";
             }

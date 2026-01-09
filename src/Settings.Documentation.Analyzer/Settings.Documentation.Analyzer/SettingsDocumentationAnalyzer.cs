@@ -25,7 +25,7 @@ namespace TomsToolbox.Settings.Documentation.Analyzer
             context.RegisterSymbolAction(AnalyzeNamedTypeWithSettingsSectionAttribute, SymbolKind.NamedType);
         }
 
-        private void AnalyzeNamedTypeWithSettingsSectionAttribute(SymbolAnalysisContext context)
+        private static void AnalyzeNamedTypeWithSettingsSectionAttribute(SymbolAnalysisContext context)
         {
             var namedTypeSymbol = (INamedTypeSymbol)context.Symbol;
 
@@ -47,7 +47,7 @@ namespace TomsToolbox.Settings.Documentation.Analyzer
             AnalyzeConfigurationPropertiesForSymbol(context, namedTypeSymbol);
         }
 
-        private void AnalyzeConfigurationPropertiesForSymbol(SymbolAnalysisContext context, INamedTypeSymbol typeSymbol)
+        private static void AnalyzeConfigurationPropertiesForSymbol(SymbolAnalysisContext context, INamedTypeSymbol typeSymbol)
         {
             var properties = typeSymbol.GetMembers()
                 .OfType<IPropertySymbol>()
@@ -82,7 +82,7 @@ namespace TomsToolbox.Settings.Documentation.Analyzer
             }
         }
 
-        private void AnalyzeInvocation(SyntaxNodeAnalysisContext context)
+        private static void AnalyzeInvocation(SyntaxNodeAnalysisContext context)
         {
             var invocation = (InvocationExpressionSyntax)context.Node;
 
@@ -125,9 +125,10 @@ namespace TomsToolbox.Settings.Documentation.Analyzer
 
                 var methodIdentifier = containingMethod.Identifier;
 
+                // Report diagnostic at the invocation site (genericName) not at the method declaration
                 var diagnostic = Diagnostic.Create(
                     Diagnostics.MissingInvocatorAttribute,
-                    methodIdentifier.GetLocation(),
+                    genericName.GetLocation(),
                     methodIdentifier);
 
                 context.ReportDiagnostic(diagnostic);
