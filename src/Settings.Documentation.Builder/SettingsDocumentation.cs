@@ -1,5 +1,6 @@
 ﻿using System.Collections;
 using System.ComponentModel;
+using System.ComponentModel.DataAnnotations;
 using System.Reflection;
 using System.Text;
 using System.Text.Json;
@@ -274,7 +275,9 @@ public static class SettingsDocumentation
 
             sectionNode.Add(name, typeNode);
 
-            typeNode.Add("type", JsonValue.Create(new[] { settingsType, "null" }));
+            var isRequired = value.IsRequired();
+            var typeArray = isRequired ? new[] { settingsType } : new[] { settingsType, "null" };
+            typeNode.Add("type", JsonValue.Create(typeArray));
 
             if (propertyType.IsEnum)
             {
@@ -355,7 +358,6 @@ public static class SettingsDocumentation
             var key = property.Name;
             var propertyType = property.PropertyType;
             var settingsType = propertyType.GetSettingsTypeName();
-
 
             text.AppendLine($"<h4>{HtmlEncode(key)}</h4>")
                 .AppendLine("<ul>")
@@ -467,6 +469,11 @@ public static class SettingsDocumentation
     private static bool IsIgnored(this SettingsValue value)
     {
         return value.Property.GetCustomAttribute<SettingsIgnoreAttribute>() != null;
+    }
+
+    private static bool IsRequired(this SettingsValue value)
+    {
+        return value.Property.GetCustomAttribute<RequiredAttribute>() != null;
     }
 
     private static JsonObject? ReadAppSettings(string path)

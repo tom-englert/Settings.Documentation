@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel;
+using System.ComponentModel.DataAnnotations;
 
 using TomsToolbox.Settings.Documentation.Abstractions;
 
@@ -26,6 +27,11 @@ public class MyOptions
 
     [Description("Database connection strings")]
     public string? Optional { get; set; } = null;
+
+    [Description("A required setting without default value")]
+    [Required]
+    // ! null assertion for demonstration purposes
+    public string Required { get; set; } = null!;
 }
 
 [SettingsSection]

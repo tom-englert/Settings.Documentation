@@ -27,6 +27,10 @@
   - type: string
   - default: 
   - description: Database connection strings
+### Required
+  - type: string
+  - default: 
+  - description: A required setting without default value
 ## ConnectionStrings
 ### Database
   - type: string
