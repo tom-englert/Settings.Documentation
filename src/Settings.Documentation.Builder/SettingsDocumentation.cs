@@ -147,7 +147,11 @@ public static class SettingsDocumentation
     {
         var options = context.Options;
         var targetDirectory = options.TargetDirectory;
-        var valuesBySection = context.Values.GroupBy(value => value.Section).ToArray();
+        var valuesBySection = context.Values
+            .OrderBy(value => value.Property.Name, StringComparer.OrdinalIgnoreCase)
+            .GroupBy(value => value.Section)
+            .OrderBy(item => item.Key, StringComparer.OrdinalIgnoreCase)
+            .ToArray();
 
         Directory.CreateDirectory(targetDirectory);
 

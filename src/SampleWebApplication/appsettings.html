@@ -12,12 +12,31 @@
 </head>
 <body>
 <h2>Configuration Settings</h2>
-<h3>MyOptions</h3>
-<h4>Port</h4>
+<h3>ConnectionStrings</h3>
+<h4>Database</h4>
 <ul>
-<li>type: number</li>
-<li>default: 99</li>
-<li>description: The port the service is running on</li>
+<li>type: string</li>
+<li>default: &quot;Server=.;Database=MyDb;Trusted_Connection=True;&quot;</li>
+<li>description: The database connection string</li>
+</ul>
+<h4>MessageQueue</h4>
+<ul>
+<li>type: string</li>
+<li>default: &quot;Server=.;Queue=MyQueue&quot;</li>
+<li>description: The message queue connection string</li>
+</ul>
+<h4>Password</h4>
+<ul>
+<li>type: string</li>
+<li>default: &quot;*****&quot;</li>
+<li>description: The database users password</li>
+</ul>
+<h3>MyOptions</h3>
+<h4>EnableVerboseLogging</h4>
+<ul>
+<li>type: boolean</li>
+<li>default: false</li>
+<li>description: Enable verbose logging</li>
 </ul>
 <h4>Host</h4>
 <ul>
@@ -25,32 +44,17 @@
 <li>default: &quot;localhost&quot;</li>
 <li>description: The host ulr running the service</li>
 </ul>
-<h4>SupportedCultures</h4>
-<ul>
-<li>type: array</li>
-<li>default: [
-  &quot;en-US&quot;,
-  &quot;de-DE&quot;
-]</li>
-<li>description: The supported cultures</li>
-</ul>
-<h4>EnableVerboseLogging</h4>
-<ul>
-<li>type: boolean</li>
-<li>default: false</li>
-<li>description: Enable verbose logging</li>
-</ul>
-<h4>Timeout</h4>
-<ul>
-<li>type: string</li>
-<li>default: &quot;00:00:30&quot;</li>
-<li>description: The timeout for service calls</li>
-</ul>
 <h4>Optional</h4>
 <ul>
 <li>type: string</li>
 <li>default: </li>
 <li>description: Database connection strings</li>
+</ul>
+<h4>Port</h4>
+<ul>
+<li>type: number</li>
+<li>default: 99</li>
+<li>description: The port the service is running on</li>
 </ul>
 <h4>Required</h4>
 <ul>
@@ -64,24 +68,20 @@
 <li>default: &quot;&lt;SomeSpecialChars&#39;$%&amp;&gt;&quot;</li>
 <li>description: Special chars</li>
 </ul>
-<h3>ConnectionStrings</h3>
-<h4>Database</h4>
+<h4>SupportedCultures</h4>
 <ul>
-<li>type: string</li>
-<li>default: &quot;Server=.;Database=MyDb;Trusted_Connection=True;&quot;</li>
-<li>description: The database connection string</li>
+<li>type: array</li>
+<li>default: [
+  &quot;en-US&quot;,
+  &quot;de-DE&quot;
+]</li>
+<li>description: The supported cultures</li>
 </ul>
-<h4>Password</h4>
+<h4>Timeout</h4>
 <ul>
 <li>type: string</li>
-<li>default: &quot;*****&quot;</li>
-<li>description: The database users password</li>
-</ul>
-<h4>MessageQueue</h4>
-<ul>
-<li>type: string</li>
-<li>default: &quot;Server=.;Queue=MyQueue&quot;</li>
-<li>description: The message queue connection string</li>
+<li>default: &quot;00:00:30&quot;</li>
+<li>description: The timeout for service calls</li>
 </ul>
 </body>
 </html>
