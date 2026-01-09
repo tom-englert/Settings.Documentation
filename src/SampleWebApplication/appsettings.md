@@ -31,6 +31,10 @@
   - type: string
   - default: 
   - description: A required setting without default value
+### SpecialChars
+  - type: string
+  - default: "<SomeSpecialChars'$%&>"
+  - description: Special chars
 ## ConnectionStrings
 ### Database
   - type: string

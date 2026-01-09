@@ -3,6 +3,7 @@ using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.Reflection;
 using System.Text;
+using System.Text.Encodings.Web;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 
@@ -301,6 +302,11 @@ public static class SettingsDocumentation
         return JsonValue.Create(value);
     }
 
+    private static string? GetStringValue(object? value)
+    {
+        return GetJsonValue(value)?.ToJsonString(JsonSerializerOptions);
+    }
+
     static void AddMarkdownPropertyDocumentation(IEnumerable<SettingsValue> values, StringBuilder text)
     {
         foreach (var value in values)
@@ -319,7 +325,7 @@ public static class SettingsDocumentation
             }
 
             var defaultValue = value.IsSecret() ? "*****" : value.DefaultValue;
-            text.AppendLine($"  - default: {GetJsonValue(defaultValue)}");
+            text.AppendLine($"  - default: {GetStringValue(defaultValue)}");
 
             var description = property.GetDescription();
             if (!string.IsNullOrEmpty(description))
@@ -369,7 +375,7 @@ public static class SettingsDocumentation
             }
 
             var defaultValue = value.IsSecret() ? "*****" : value.DefaultValue;
-            text.AppendLine($"<li>default: {HtmlEncode(GetJsonValue(defaultValue))}</li>");
+            text.AppendLine($"<li>default: {HtmlEncode(GetStringValue(defaultValue))}</li>");
 
             var description = property.GetDescription();
             if (!string.IsNullOrEmpty(description))
@@ -495,7 +501,11 @@ public static class SettingsDocumentation
 
     private static JsonSerializerOptions CreateSerializerOptions()
     {
-        var options = new JsonSerializerOptions() { WriteIndented = true };
+        var options = new JsonSerializerOptions()
+        {
+            WriteIndented = true,
+            Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping
+        };
 
         options.MakeReadOnly(true);
 

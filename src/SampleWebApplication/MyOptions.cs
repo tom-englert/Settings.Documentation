@@ -32,6 +32,9 @@ public class MyOptions
     [Required]
     // ! null assertion for demonstration purposes
     public string Required { get; set; } = null!;
+
+    [Description("Special chars")]
+    public string? SpecialChars { get; set; } = "<SomeSpecialChars'$%&>";
 }
 
 [SettingsSection]
