@@ -22,26 +22,53 @@
 <h4>Host</h4>
 <ul>
 <li>type: string</li>
-<li>default: localhost</li>
+<li>default: &quot;localhost&quot;</li>
 <li>description: The host ulr running the service</li>
+</ul>
+<h4>SupportedCultures</h4>
+<ul>
+<li>type: array</li>
+<li>default: [
+  &quot;en-US&quot;,
+  &quot;de-DE&quot;
+]</li>
+<li>description: The supported cultures</li>
+</ul>
+<h4>EnableVerboseLogging</h4>
+<ul>
+<li>type: boolean</li>
+<li>default: false</li>
+<li>description: Enable verbose logging</li>
+</ul>
+<h4>Timeout</h4>
+<ul>
+<li>type: string</li>
+<li>default: &quot;00:00:30&quot;</li>
+<li>description: The timeout for service calls</li>
+</ul>
+<h4>Optional</h4>
+<ul>
+<li>type: string</li>
+<li>default: </li>
+<li>description: Database connection strings</li>
 </ul>
 <h3>ConnectionStrings</h3>
 <h4>Database</h4>
 <ul>
 <li>type: string</li>
-<li>default: Server=.;Database=MyDb;Trusted_Connection=True;</li>
+<li>default: &quot;Server=.;Database=MyDb;Trusted_Connection=True;&quot;</li>
 <li>description: The database connection string</li>
 </ul>
 <h4>Password</h4>
 <ul>
 <li>type: string</li>
-<li>default: *****</li>
+<li>default: &quot;*****&quot;</li>
 <li>description: The database users password</li>
 </ul>
 <h4>MessageQueue</h4>
 <ul>
 <li>type: string</li>
-<li>default: Server=.;Queue=MyQueue</li>
+<li>default: &quot;Server=.;Queue=MyQueue&quot;</li>
 <li>description: The message queue connection string</li>
 </ul>
 </body>

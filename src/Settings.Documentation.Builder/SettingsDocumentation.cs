@@ -1,5 +1,5 @@
-﻿using System.ComponentModel;
-using System.Globalization;
+﻿using System.Collections;
+using System.ComponentModel;
 using System.Reflection;
 using System.Text;
 using System.Text.Json;
@@ -113,7 +113,7 @@ public static class SettingsDocumentation
             var configurationValues = configClass
                 .GetProperties()
                 .Where(propertyInfo => propertyInfo is { CanRead: true, CanWrite: true })
-                .Select(propertyInfo => new SettingsValue(section, propertyInfo, Convert.ToString(propertyInfo.GetValue(defaultInstance), CultureInfo.InvariantCulture)))
+                .Select(propertyInfo => new SettingsValue(section, propertyInfo, propertyInfo.GetValue(defaultInstance)))
                 .Where(item => !item.IsIgnored());
 
             values.AddRange(configurationValues);
@@ -146,7 +146,6 @@ public static class SettingsDocumentation
         var options = context.Options;
         var targetDirectory = options.TargetDirectory;
         var valuesBySection = context.Values.GroupBy(value => value.Section).ToArray();
-
 
         Directory.CreateDirectory(targetDirectory);
 
@@ -213,7 +212,7 @@ public static class SettingsDocumentation
 
                     ++valuesAdded;
 
-                    sectionNode[name] = GetJsonValue(defaultValue, property.PropertyType);
+                    sectionNode[name] = GetJsonValue(defaultValue);
                 }
 
                 if (valuesAdded <= 0)
@@ -290,22 +289,12 @@ public static class SettingsDocumentation
 
             var defaultValue = value.IsSecret() ? "*****" : value.DefaultValue;
 
-            typeNode.Add("default", GetJsonValue(defaultValue, property.PropertyType));
+            typeNode.Add("default", GetJsonValue(defaultValue));
         }
     }
 
-    private static JsonValue? GetJsonValue(string? value, Type propertyType)
+    private static JsonValue? GetJsonValue(object? value)
     {
-        if (propertyType == typeof(bool))
-        {
-            return JsonValue.Create(bool.TryParse(value, out var b) && b);
-        }
-
-        if (NumberTypes.Contains(propertyType) && double.TryParse(value, out var d))
-        {
-            return JsonValue.Create(d);
-        }
-
         return JsonValue.Create(value);
     }
 
@@ -327,7 +316,7 @@ public static class SettingsDocumentation
             }
 
             var defaultValue = value.IsSecret() ? "*****" : value.DefaultValue;
-            text.AppendLine($"  - default: {defaultValue}");
+            text.AppendLine($"  - default: {GetJsonValue(defaultValue)}");
 
             var description = property.GetDescription();
             if (!string.IsNullOrEmpty(description))
@@ -378,7 +367,7 @@ public static class SettingsDocumentation
             }
 
             var defaultValue = value.IsSecret() ? "*****" : value.DefaultValue;
-            text.AppendLine($"<li>default: {HtmlEncode(defaultValue)}</li>");
+            text.AppendLine($"<li>default: {HtmlEncode(GetJsonValue(defaultValue))}</li>");
 
             var description = property.GetDescription();
             if (!string.IsNullOrEmpty(description))
@@ -460,6 +449,12 @@ public static class SettingsDocumentation
 
         if (propertyType == typeof(bool))
             return "boolean";
+
+        if (propertyType == typeof(string))
+            return "string";
+
+        if (propertyType.IsAssignableTo(typeof(IEnumerable)))
+            return "array";
 
         return "string";
     }

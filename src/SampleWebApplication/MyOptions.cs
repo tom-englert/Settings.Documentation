@@ -11,8 +11,21 @@ public class MyOptions
 
     [Description("The port the service is running on")]
     public int Port { get; init; } = 99;
+
     [Description("The host ulr running the service")]
     public string Host { get; init; } = "localhost";
+
+    [Description("The supported cultures")]
+    public IReadOnlyCollection<string> SupportedCultures { get; init; } = ["en-US", "de-DE"];
+
+    [Description("Enable verbose logging")]
+    public bool EnableVerboseLogging { get; init; } = false;
+
+    [Description("The timeout for service calls")]
+    public TimeSpan Timeout { get; init; } = TimeSpan.FromSeconds(30);
+
+    [Description("Database connection strings")]
+    public string? Optional { get; set; } = null;
 }
 
 [SettingsSection]
