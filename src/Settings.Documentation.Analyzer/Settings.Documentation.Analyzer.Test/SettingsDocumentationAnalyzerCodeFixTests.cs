@@ -17,20 +17,20 @@ public class SettingsDocumentationAnalyzerCodeFixTests
         const string source =
             """
             using Microsoft.Extensions.DependencyInjection;
-            
+
             static class Application
             {
                 static void Program()
                 {
                     IServiceCollection services = null!;
-            
+
                     services
-                        .AddOptions<MyOptions>()
+                        .{|#0:AddOptions<MyOptions>|}()
                         .BindConfiguration("MyOptions");
                 }
             }
-            
-            public class {|#0:MyOptions|}
+
+            public class MyOptions
             {
                 [System.ComponentModel.Description("The port used to connect to the host")]
                 public int Port { get; init; } = 99;
@@ -43,13 +43,13 @@ public class SettingsDocumentationAnalyzerCodeFixTests
             """
             using Microsoft.Extensions.DependencyInjection;
             using TomsToolbox.Settings.Documentation.Abstractions;
-            
+
             static class Application
             {
                 static void Program()
                 {
                     IServiceCollection services = null!;
-            
+
                     services
                         .AddOptions<MyOptions>()
                         .BindConfiguration("MyOptions");
@@ -87,21 +87,21 @@ public class SettingsDocumentationAnalyzerCodeFixTests
             using TomsToolbox.Settings.Documentation.Abstractions;
             using Microsoft.Extensions.DependencyInjection;
             using System;
-            
+
             static class Application
             {
                 static void Program()
                 {
                     IServiceCollection services = null!;
-            
+
                     services
-                        .AddOptions<MyOptions>()
+                        .{|#0:AddOptions<MyOptions>|}()
                         .BindConfiguration("MyOptions");
                 }
             }
-            
+
             [Serializable]
-            public class {|#0:MyOptions|}
+            public class MyOptions
             {
                 [System.ComponentModel.Description("The port used to connect to the host")]
                 public int Port { get; init; } = 99;
@@ -113,19 +113,19 @@ public class SettingsDocumentationAnalyzerCodeFixTests
             using TomsToolbox.Settings.Documentation.Abstractions;
             using Microsoft.Extensions.DependencyInjection;
             using System;
-            
+
             static class Application
             {
                 static void Program()
                 {
                     IServiceCollection services = null!;
-            
+
                     services
                         .AddOptions<MyOptions>()
                         .BindConfiguration("MyOptions");
                 }
             }
-            
+
             [Serializable]
             [SettingsSection]
             public class MyOptions
@@ -156,23 +156,23 @@ public class SettingsDocumentationAnalyzerCodeFixTests
             using TomsToolbox.Settings.Documentation.Abstractions;
             using Microsoft.Extensions.DependencyInjection;
             using System;
-            
+
             static class Application
             {
                 static void Program()
                 {
                     IServiceCollection services = null!;
-            
+
                     services
-                        .AddOptions<MyOptions>()
+                        .{|#0:AddOptions<MyOptions>|}()
                         .BindConfiguration("MyOptions");
                 }
             }
-            
+
             /// <summary>
             /// Some existing comments
             /// </summary>
-            public class {|#0:MyOptions|}
+            public class MyOptions
             {
                 [System.ComponentModel.Description("The port used to connect to the host")]
                 public int Port { get; init; } = 99;
@@ -184,13 +184,13 @@ public class SettingsDocumentationAnalyzerCodeFixTests
             using TomsToolbox.Settings.Documentation.Abstractions;
             using Microsoft.Extensions.DependencyInjection;
             using System;
-            
+
             static class Application
             {
                 static void Program()
                 {
                     IServiceCollection services = null!;
-            
+
                     services
                         .AddOptions<MyOptions>()
                         .BindConfiguration("MyOptions");

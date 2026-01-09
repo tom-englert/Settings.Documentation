@@ -22,6 +22,64 @@ namespace TomsToolbox.Settings.Documentation.Analyzer
             context.EnableConcurrentExecution();
 
             context.RegisterSyntaxNodeAction(AnalyzeInvocation, SyntaxKind.InvocationExpression);
+            context.RegisterSymbolAction(AnalyzeNamedTypeWithSettingsSectionAttribute, SymbolKind.NamedType);
+        }
+
+        private void AnalyzeNamedTypeWithSettingsSectionAttribute(SymbolAnalysisContext context)
+        {
+            var namedTypeSymbol = (INamedTypeSymbol)context.Symbol;
+
+            // Only analyze types that have the SettingsSection attribute
+            var hasSettingsSectionAttribute = namedTypeSymbol.GetAttributes()
+                .Any(attr => attr.AttributeClass?.Name is "SettingsSectionAttribute" or "SettingsSection");
+
+            if (!hasSettingsSectionAttribute)
+                return;
+
+            // Check if type has an ignore attribute
+            var hasSettingsIgnoreAttribute = namedTypeSymbol.GetAttributes()
+                .Any(attr => attr.AttributeClass?.Name is "SettingsIgnoreAttribute" or "SettingsIgnore");
+
+            if (hasSettingsIgnoreAttribute)
+                return;
+
+            // Analyze properties for missing descriptions
+            AnalyzeConfigurationPropertiesForSymbol(context, namedTypeSymbol);
+        }
+
+        private void AnalyzeConfigurationPropertiesForSymbol(SymbolAnalysisContext context, INamedTypeSymbol typeSymbol)
+        {
+            var properties = typeSymbol.GetMembers()
+                .OfType<IPropertySymbol>()
+                .Where(p => !p.IsReadOnly && !p.IsStatic);
+
+            foreach (var property in properties)
+            {
+                var attributes = property.GetAttributes();
+
+                var hasSettingsIgnoreAttribute = attributes.Any(attr =>
+                    attr.AttributeClass?.Name is "SettingsIgnoreAttribute" or "SettingsIgnore");
+
+                if (hasSettingsIgnoreAttribute)
+                    continue;
+
+                var hasDescriptionAttribute = attributes.Any(attr =>
+                    attr.AttributeClass?.Name is "DescriptionAttribute" or "Description");
+
+                if (hasDescriptionAttribute)
+                    continue;
+
+                var propertyLocation = property.Locations.FirstOrDefault();
+                if (propertyLocation is null || !propertyLocation.IsInSource)
+                    continue;
+
+                var diagnostic = Diagnostic.Create(
+                    Diagnostics.MissingDescriptionAttribute,
+                    propertyLocation,
+                    property.Name, typeSymbol.Name);
+
+                context.ReportDiagnostic(diagnostic);
+            }
         }
 
         private void AnalyzeInvocation(SyntaxNodeAnalysisContext context)
@@ -35,7 +93,7 @@ namespace TomsToolbox.Settings.Documentation.Analyzer
             // Check if the method name is "AddOptions"
             if (memberAccess.Name is not GenericNameSyntax genericName)
                 return;
-            
+
             // Get the symbol info for the invocation
             var symbolInfo = context.SemanticModel.GetSymbolInfo(invocation, context.CancellationToken);
             if (symbolInfo.Symbol is not IMethodSymbol methodSymbol)
@@ -61,7 +119,7 @@ namespace TomsToolbox.Settings.Documentation.Analyzer
             if (typeArgument is ITypeParameterSymbol)
             {
                 var containingMethod = invocation.FirstAncestorOrSelf<MethodDeclarationSyntax>();
-                
+
                 if (containingMethod == null || containingMethod.AttributeLists.SelectMany(list => list.Attributes).Any(attr => attr.Name.ToString().StartsWith("SettingsAddOptionsInvocator")))
                     return;
 
@@ -77,65 +135,37 @@ namespace TomsToolbox.Settings.Documentation.Analyzer
                 return;
             }
 
-            var hasSettingsIgnoreAttribute = typeArgument.GetAttributes()
-                .Any(attr => attr.AttributeClass?.Name is "SettingsIgnoreAttribute" or "SettingsIgnore");
-
-            if (hasSettingsIgnoreAttribute) 
+            // Ensure we have a valid named type symbol
+            if (typeArgument is not INamedTypeSymbol namedTypeSymbol)
                 return;
 
-            var hasSettingsSectionAttribute = typeArgument.GetAttributes()
+            var hasSettingsIgnoreAttribute = namedTypeSymbol.GetAttributes()
+                .Any(attr => attr.AttributeClass?.Name is "SettingsIgnoreAttribute" or "SettingsIgnore");
+
+            if (hasSettingsIgnoreAttribute)
+                return;
+
+            var hasSettingsSectionAttribute = namedTypeSymbol.GetAttributes()
                 .Any(attr => attr.AttributeClass?.Name is "SettingsSectionAttribute" or "SettingsSection");
 
-            var typeLocation = typeArgument.Locations.FirstOrDefault();
+            // Only report diagnostics if the type is defined in source code within this compilation
+            var typeLocation = namedTypeSymbol.Locations.FirstOrDefault();
             if (typeLocation is null || !typeLocation.IsInSource)
                 return;
 
+            // Report missing [SettingsSection] attribute at the invocation site
             if (!hasSettingsSectionAttribute)
             {
                 var diagnostic = Diagnostic.Create(
                     Diagnostics.MissingSettingsSectionAttribute,
-                    typeArgument.Locations[0],
-                    typeArgument.Name);
+                    genericName.GetLocation(),
+                    namedTypeSymbol.Name);
 
                 context.ReportDiagnostic(diagnostic);
             }
 
-            // Now check all writable properties of the type
-            AnalyzeConfigurationProperties(context, typeArgument, typeLocation);
-        }
-
-        private void AnalyzeConfigurationProperties(SyntaxNodeAnalysisContext context, ITypeSymbol typeSymbol, Location typeLocation)
-        {
-            var properties = typeSymbol.GetMembers()
-                .OfType<IPropertySymbol>()
-                .Where(p => !p.IsReadOnly && !p.IsStatic);
-
-            foreach (var property in properties)
-            {
-                // Check if property has any of the special attributes
-                var attributes = property.GetAttributes();
-
-                var hasSettingsIgnoreAttribute = attributes.Any(attr =>
-                    attr.AttributeClass?.Name is "SettingsIgnoreAttribute" or "SettingsIgnore");
-
-                if (hasSettingsIgnoreAttribute)
-                    continue;
-
-                var hasDescriptionAttribute = attributes.Any(attr =>
-                    attr.AttributeClass?.Name is "DescriptionAttribute" or "Description");
-
-                if (hasDescriptionAttribute) 
-                    continue;
-
-                var propertyLocation = property.Locations.FirstOrDefault() ?? typeLocation;
-
-                var diagnostic = Diagnostic.Create(
-                    Diagnostics.MissingDescriptionAttribute,
-                    propertyLocation,
-                    property.Name, typeSymbol.Name);
-
-                context.ReportDiagnostic(diagnostic);
-            }
+            // Note: Property diagnostics are handled by AnalyzeNamedTypeWithSettingsSectionAttribute
+            // when the type has [SettingsSection] attribute
         }
     }
 }

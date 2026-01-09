@@ -25,22 +25,19 @@ public class SettingsDocumentationAnalyzerMethodAttributeCodeFixProvider : CodeF
         foreach (var diagnostic in context.Diagnostics)
         {
             var diagnosticSpan = diagnostic.Location.SourceSpan;
-            
+
             // Find the method declaration identified by the diagnostic.
             var syntaxNode = root?.FindNode(diagnosticSpan);
             if (syntaxNode is not MethodDeclarationSyntax methodDeclaration)
                 continue;
 
             // Register a code action that will invoke the fix.
-            var codeAction = CodeAction.Create("Add [SettingsAddOptionsInvocator] attribute", ApplyFix, "AddSettingsAddOptionsInvocatorAttribute");
+            var codeAction = CodeAction.Create(
+                "Add [SettingsAddOptionsInvocator] attribute",
+                cancellationToken => context.Document.AddAttributeAsync(methodDeclaration, "SettingsAddOptionsInvocator", "TomsToolbox.Settings.Documentation.Abstractions", cancellationToken),
+                "AddSettingsAddOptionsInvocatorAttribute");
 
             context.RegisterCodeFix(codeAction, diagnostic);
-            continue;
-
-            Task<Document> ApplyFix(CancellationToken c)
-            {
-                return context.Document.AddAttributeAsync(methodDeclaration, "SettingsAddOptionsInvocator", "TomsToolbox.Settings.Documentation.Abstractions", c);
-            }
         }
     }
 }

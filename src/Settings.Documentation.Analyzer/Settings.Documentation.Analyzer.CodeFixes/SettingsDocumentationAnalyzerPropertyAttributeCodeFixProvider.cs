@@ -31,16 +31,12 @@ public class SettingsDocumentationAnalyzerPropertyAttributeCodeFixProvider : Cod
                 continue;
 
             // Register a code action that will invoke the fix.
-            var codeAction = CodeAction.Create("Add [Description] attribute", ApplyFix, "AddDescriptionAttribute");
+            var codeAction = CodeAction.Create(
+                "Add [Description] attribute",
+                c => context.Document.AddAttributeAsync(propertyDeclaration, "Description(\"TODO: Add description\")", "System.ComponentModel", c),
+                "AddDescriptionAttribute");
 
             context.RegisterCodeFix(codeAction, diagnostic);
-            continue;
-
-            Task<Document> ApplyFix(CancellationToken c)
-            {
-                return context.Document.AddAttributeAsync(propertyDeclaration, "Description(\"TODO: Add description\")", "System.ComponentModel", c);
-            }
         }
-
     }
 }

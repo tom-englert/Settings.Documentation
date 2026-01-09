@@ -60,26 +60,26 @@ public class SettingsDocumentationAnalyzerUnitTest
         const string source =
             """
             using Microsoft.Extensions.DependencyInjection;
-            
+
             static class Application
             {
                 static void Program()
                 {
                     IServiceCollection services = null!;
-            
+
                     services
                         .AddSomeService()
-                        .AddOptions<MyOptions>()
+                        .{|#0:AddOptions<MyOptions>|}()
                         .BindConfiguration("MyOptions");
                 }
-            
+
                 static IServiceCollection AddSomeService(this IServiceCollection services)
                 {
                     return services;
                 }
             }
-            
-            public class {|#0:MyOptions|}
+
+            public class MyOptions
             {
                 [System.ComponentModel.Description("The port used to connect to the host")]
                 public int Port { get; init; } = 99;
@@ -103,28 +103,28 @@ public class SettingsDocumentationAnalyzerUnitTest
         const string source =
             """
             using Microsoft.Extensions.DependencyInjection;
-            
+
             static class Application
             {
                 static void Program()
                 {
                     IServiceCollection services = null!;
-            
+
                     services
                         .AddSomeService()
-                        .AddOptions<MyOptions>()
+                        .{|#0:AddOptions<MyOptions>|}()
                         .BindConfiguration("MyOptions");
                 }
-            
+
                 static IServiceCollection AddSomeService(this IServiceCollection services)
                 {
                     return services;
                 }
             }
-            
-            public class {|#0:MyOptions|}
+
+            public class MyOptions
             {
-                public int {|#1:Port|} { get; init; } = 99;
+                public int Port { get; init; } = 99;
                 [System.ComponentModel.Description("The host ulr running the service")]
                 public string Host { get; init; } = "localhost";
             }
@@ -135,8 +135,7 @@ public class SettingsDocumentationAnalyzerUnitTest
             TestCode = source,
             ExpectedDiagnostics =
             {
-                Diagnostics.MissingSettingsSectionAttribute.AsResult().WithArguments("MyOptions").WithLocation(0),
-                Diagnostics.MissingDescriptionAttribute.AsResult().WithArguments("Port", "MyOptions").WithLocation(1)
+                Diagnostics.MissingSettingsSectionAttribute.AsResult().WithArguments("MyOptions").WithLocation(0)
             }
         };
 
@@ -196,17 +195,17 @@ public class SettingsDocumentationAnalyzerUnitTest
             """
             using Microsoft.Extensions.DependencyInjection;
             using TomsToolbox.Settings.Documentation.Abstractions;
-            
+
             static class Application
             {
                 static void Program()
                 {
                     IServiceCollection services = null!;
-            
+
                     services
-                        .CustomAddOptions<MyOptions>();
+                        .{|#0:CustomAddOptions<MyOptions>|}();
                 }
-            
+
                 [SettingsAddOptionsInvocator]
                 static IServiceCollection CustomAddOptions<T>(this IServiceCollection services) where T : class
                 {
@@ -216,10 +215,10 @@ public class SettingsDocumentationAnalyzerUnitTest
                     return services;
                 }
             }
-            
-            public class {|#0:MyOptions|}
+
+            public class MyOptions
             {
-                public int {|#1:Port|} { get; init; } = 99;
+                public int Port { get; init; } = 99;
                 [System.ComponentModel.Description("The host ulr running the service")]
                 public string Host { get; init; } = "localhost";
             }
@@ -230,8 +229,56 @@ public class SettingsDocumentationAnalyzerUnitTest
             TestCode = source,
             ExpectedDiagnostics =
             {
-                Diagnostics.MissingSettingsSectionAttribute.AsResult().WithArguments("MyOptions").WithLocation(0),
-                Diagnostics.MissingDescriptionAttribute.AsResult().WithArguments("Port", "MyOptions").WithLocation(1)
+                Diagnostics.MissingSettingsSectionAttribute.AsResult().WithArguments("MyOptions").WithLocation(0)
+            }
+        };
+
+        await test.RunAsync(TestContext.CancellationToken);
+    }
+
+    [TestMethod]
+    public async Task WhenConfigClassHasSettingsSectionButMissingPropertyDescriptions_DiagnosticIsEmitted()
+    {
+        const string source =
+            """
+            using Microsoft.Extensions.DependencyInjection;
+            using TomsToolbox.Settings.Documentation.Abstractions;
+
+            static class Application
+            {
+                static void Program()
+                {
+                    IServiceCollection services = null!;
+
+                    services
+                        .AddSomeService()
+                        .AddOptions<MyOptions>()
+                        .BindConfiguration("MyOptions");
+                }
+
+                static IServiceCollection AddSomeService(this IServiceCollection services)
+                {
+                    return services;
+                }
+            }
+
+            [SettingsSection]
+            public class MyOptions
+            {
+                public int {|#0:Port|} { get; init; } = 99;
+                [System.ComponentModel.Description("The host ulr running the service")]
+                public string Host { get; init; } = "localhost";
+                public string {|#1:ConnectionString|} { get; init; } = "Server=localhost";
+            }
+            """;
+
+        var test = new Test
+        {
+            TestCode = source,
+            ExpectedDiagnostics =
+            {
+                Diagnostics.MissingDescriptionAttribute.AsResult().WithArguments("Port", "MyOptions").WithLocation(0),
+                Diagnostics.MissingDescriptionAttribute.AsResult().WithArguments("ConnectionString", "MyOptions").WithLocation(1)
             }
         };
 
