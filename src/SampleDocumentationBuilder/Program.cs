@@ -10,7 +10,6 @@ var targetDirectory = Path.Combine(solutionDir.FullName, "SampleWebApplication")
 
 Console.WriteLine($"Generating settings documentation in {targetDirectory}");
 
-
 var builder = TomsToolbox.SampleWebApplication.AppBuilder.CreateBuilder(args);
 
 builder.Services
