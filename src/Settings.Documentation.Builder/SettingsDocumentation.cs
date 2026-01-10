@@ -438,14 +438,17 @@ public static class SettingsDocumentation
         var sectionAttribute = type.GetCustomAttribute<SettingsSectionAttribute>();
 
         if (sectionAttribute is null)
-            return type.GetSectionFromField();
+            return null;
 
         return sectionAttribute.SectionName ?? type.GetSectionFromField() ?? type.Name;
     }
 
     private static string? GetSectionFromField(this Type type)
     {
-        var field = type.GetField("ConfigurationSection", BindingFlags.Public | BindingFlags.Static);
+        var field = type
+            .GetFields(BindingFlags.Public | BindingFlags.Static)
+            .FirstOrDefault(field => field.FieldType == typeof(string) && field is { IsLiteral: true, IsInitOnly: false });
+
         return field?.GetValue(null) as string;
     }
 

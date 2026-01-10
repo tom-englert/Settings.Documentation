@@ -237,9 +237,9 @@ This maps to:
 }
 ```
 
-### 2. ConfigurationSection Constant
+### 2. Constant member
 
-If the attribute has no explicit name, the library looks for a public static `ConfigurationSection` field:
+If the attribute has no explicit name, the library looks for the first member that is "public const string":
 
 ```csharp
 [SettingsSection]
@@ -260,7 +260,7 @@ This maps to:
 }
 ```
 
-### 3. Class Name (Default)
+### 3. Class Name
 
 If neither of the above is found, the class name itself is used:
 
@@ -310,7 +310,7 @@ The section name is resolved in this order:
 
 1. **Custom mapping**: `options.SectionMapping(type)`
 2. **Attribute parameter**: `[SettingsSection("ExplicitName")]`
-3. **ConfigurationSection field**: `public const string ConfigurationSection = "FieldName";`
+3. **Constant string field**: `public const string ConfigurationSection = "MySectionName";`
 4. **Class name**: Uses the type's `Name`, if a `[SettingsSection]` attribure is present
 
 
