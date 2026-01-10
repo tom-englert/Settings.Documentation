@@ -1,5 +1,4 @@
-﻿using Microsoft.CodeAnalysis;
-using Microsoft.CodeAnalysis.CSharp.Testing;
+﻿using Microsoft.CodeAnalysis.CSharp.Testing;
 using Microsoft.CodeAnalysis.Testing;
 
 using TomsToolbox.Settings.Documentation.Abstractions;
@@ -197,10 +196,10 @@ public class SettingsDocumentationAnalyzerCodeFixTests
                 }
             }
 
-            [SettingsSection]
             /// <summary>
             /// Some existing comments
             /// </summary>
+            [SettingsSection]
             public class MyOptions
             {
                 [System.ComponentModel.Description("The port used to connect to the host")]
@@ -461,26 +460,26 @@ public class SettingsDocumentationAnalyzerCodeFixTests
             using Microsoft.Extensions.DependencyInjection;
             using TomsToolbox.Settings.Documentation.Abstractions;
             using System.ComponentModel;
-            
+
             static class Application
             {
                 static void Program()
                 {
                     IServiceCollection services = null!;
-            
+
                     services
                         .AddOptions<MyOptions>()
                         .BindConfiguration("MyOptions");
                 }
             }
-            
+
             [SettingsSection]
             public class MyOptions
             {
-                [Description("TODO: Add description")]
                 /// <summary>
                 /// The connection string for the database.
                 /// </summary>
+                [Description("TODO: Add description")]
                 public string ConnectionString { get; init; }
             }
             """;
@@ -763,10 +762,10 @@ public class SettingsDocumentationAnalyzerCodeFixTests
                     services.AddMyOptions<MyOptions>();
                 }
 
-                [SettingsAddOptionsInvocator]
                 /// <summary>
                 /// Adds options configuration.
                 /// </summary>
+                [SettingsAddOptionsInvocator]
                 static IServiceCollection AddMyOptions<T>(this IServiceCollection services) where T : class
                 {
                     services.AddOptions<T>();
@@ -782,91 +781,91 @@ public class SettingsDocumentationAnalyzerCodeFixTests
             }
             """;
 
-                        var test = new MethodAttributeTest
-                        {
-                            TestCode = source,
-                            FixedCode = fixedSource,
-                            ExpectedDiagnostics =
+        var test = new MethodAttributeTest
+        {
+            TestCode = source,
+            FixedCode = fixedSource,
+            ExpectedDiagnostics =
                             {
                                 Diagnostics.MissingInvocatorAttribute.AsResult().WithArguments("AddMyOptions").WithLocation(0)
                             }
-                        };
+        };
 
-                        await test.RunAsync(TestContext.CancellationToken);
-                    }
+        await test.RunAsync(TestContext.CancellationToken);
+    }
 
-                    [TestMethod]
-                    public async Task AddSettingsAddOptionsInvocatorAttribute_WhenUsingAlreadyExists_DoesNotDuplicateUsing()
-                    {
-                const string source =
-                    """
-                    using Microsoft.Extensions.DependencyInjection;
-                    using TomsToolbox.Settings.Documentation.Abstractions;
+    [TestMethod]
+    public async Task AddSettingsAddOptionsInvocatorAttribute_WhenUsingAlreadyExists_DoesNotDuplicateUsing()
+    {
+        const string source =
+            """
+            using Microsoft.Extensions.DependencyInjection;
+            using TomsToolbox.Settings.Documentation.Abstractions;
 
-                    static class Application
-                    {
-                        static void Program()
-                        {
-                            IServiceCollection services = null!;
-                            services.AddMyOptions<MyOptions>();
-                        }
-
-                        static IServiceCollection AddMyOptions<T>(this IServiceCollection services) where T : class
-                        {
-                            services.{|#0:AddOptions<T>|}();
-                            return services;
-                        }
-                    }
-
-                    [SettingsSection]
-                    public class MyOptions
-                    {
-                        [System.ComponentModel.Description("The port used to connect to the host")]
-                        public int Port { get; init; } = 99;
-                    }
-                    """;
-
-                const string fixedSource =
-                    """
-                    using Microsoft.Extensions.DependencyInjection;
-                    using TomsToolbox.Settings.Documentation.Abstractions;
-
-                    static class Application
-                    {
-                        static void Program()
-                        {
-                            IServiceCollection services = null!;
-                            services.AddMyOptions<MyOptions>();
-                        }
-
-                        [SettingsAddOptionsInvocator]
-                        static IServiceCollection AddMyOptions<T>(this IServiceCollection services) where T : class
-                        {
-                            services.AddOptions<T>();
-                            return services;
-                        }
-                    }
-
-                    [SettingsSection]
-                    public class MyOptions
-                    {
-                        [System.ComponentModel.Description("The port used to connect to the host")]
-                        public int Port { get; init; } = 99;
-                    }
-                    """;
-
-                var test = new MethodAttributeTest
+            static class Application
+            {
+                static void Program()
                 {
-                    TestCode = source,
-                    FixedCode = fixedSource,
-                    ExpectedDiagnostics =
+                    IServiceCollection services = null!;
+                    services.AddMyOptions<MyOptions>();
+                }
+
+                static IServiceCollection AddMyOptions<T>(this IServiceCollection services) where T : class
+                {
+                    services.{|#0:AddOptions<T>|}();
+                    return services;
+                }
+            }
+
+            [SettingsSection]
+            public class MyOptions
+            {
+                [System.ComponentModel.Description("The port used to connect to the host")]
+                public int Port { get; init; } = 99;
+            }
+            """;
+
+        const string fixedSource =
+            """
+            using Microsoft.Extensions.DependencyInjection;
+            using TomsToolbox.Settings.Documentation.Abstractions;
+
+            static class Application
+            {
+                static void Program()
+                {
+                    IServiceCollection services = null!;
+                    services.AddMyOptions<MyOptions>();
+                }
+
+                [SettingsAddOptionsInvocator]
+                static IServiceCollection AddMyOptions<T>(this IServiceCollection services) where T : class
+                {
+                    services.AddOptions<T>();
+                    return services;
+                }
+            }
+
+            [SettingsSection]
+            public class MyOptions
+            {
+                [System.ComponentModel.Description("The port used to connect to the host")]
+                public int Port { get; init; } = 99;
+            }
+            """;
+
+        var test = new MethodAttributeTest
+        {
+            TestCode = source,
+            FixedCode = fixedSource,
+            ExpectedDiagnostics =
                     {
                         Diagnostics.MissingInvocatorAttribute.AsResult().WithArguments("AddMyOptions").WithLocation(0)
                     }
-                };
+        };
 
-                await test.RunAsync(TestContext.CancellationToken);
-            }
+        await test.RunAsync(TestContext.CancellationToken);
+    }
 
     private abstract class CodeFixTestBase<TAnalyzer, TCodeFix> : CSharpCodeFixTest<TAnalyzer, TCodeFix, DefaultVerifier>
         where TAnalyzer : Microsoft.CodeAnalysis.Diagnostics.DiagnosticAnalyzer, new()
@@ -881,21 +880,6 @@ public class SettingsDocumentationAnalyzerCodeFixTests
 
             this.AddReferences(typeof(SettingsSectionAttribute).Assembly);
         }
-
-        //public new string TestCode
-        //{
-        //    set => base.TestCode = NormalizeLineEndings(value);
-        //}
-
-        //public new string FixedCode
-        //{
-        //    set => base.FixedCode = NormalizeLineEndings(value);
-        //}
-
-        //private static string NormalizeLineEndings(string value)
-        //{
-        //    return value.Replace("\r\n", "\n").Replace("\n", Environment.NewLine);
-        //}
     }
 
     private sealed class ClassAttributeTest : CodeFixTestBase<SettingsDocumentationAnalyzer, SettingsDocumentationAnalyzerClassAttributeCodeFixProvider>
