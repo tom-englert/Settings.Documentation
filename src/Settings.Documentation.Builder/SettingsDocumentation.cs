@@ -1,6 +1,4 @@
 ﻿using System.Collections;
-using System.ComponentModel;
-using System.ComponentModel.DataAnnotations;
 using System.Reflection;
 using System.Text;
 using System.Text.Encodings.Web;
@@ -106,17 +104,12 @@ public static class SettingsDocumentation
                 continue;
             }
 
-            var defaultInstance = Activator.CreateInstance(configClass);
-            if (defaultInstance == null)
-            {
-                throw new InvalidOperationException($"Unable to create instance of {configClass}. Ensure the type has a parameterless constructor.");
-            }
-
+            var defaultInstance = Activator.CreateInstance(configClass) ?? throw new InvalidOperationException($"Unable to create instance of {configClass}. Ensure the type has a parameterless constructor.");
             var configurationValues = configClass
                 .GetProperties()
                 .Where(propertyInfo => propertyInfo is { CanRead: true, CanWrite: true })
-                .Select(propertyInfo => new SettingsValue(section, propertyInfo, propertyInfo.GetValue(defaultInstance)))
-                .Where(item => !item.IsIgnored());
+                .Select(propertyInfo => SettingsValue.Create(section, propertyInfo, defaultInstance))
+                .Where(item => !item.IsIgnored);
 
             values.AddRange(configurationValues);
         }
@@ -148,7 +141,7 @@ public static class SettingsDocumentation
         var options = context.Options;
         var targetDirectory = options.TargetDirectory;
         var valuesBySection = context.Values
-            .OrderBy(value => value.Property.Name, StringComparer.OrdinalIgnoreCase)
+            .OrderBy(value => value.Name, StringComparer.OrdinalIgnoreCase)
             .GroupBy(value => value.Section)
             .OrderBy(item => item.Key, StringComparer.OrdinalIgnoreCase)
             .ToArray();
@@ -207,13 +200,13 @@ public static class SettingsDocumentation
 
                 foreach (var sectionValue in sectionValues)
                 {
-                    var (_, property, defaultValue) = sectionValue;
-                    var name = property.Name;
+                    var defaultValue = sectionValue.DefaultValue;
+                    var name = sectionValue.Name;
 
                     if (sectionNode[name] != null)
                         continue; // don't override existing settings
 
-                    if (sectionValue.IsSecret())
+                    if (sectionValue.IsSecret)
                         defaultValue = "*****";
 
                     ++valuesAdded;
@@ -271,31 +264,30 @@ public static class SettingsDocumentation
     {
         foreach (var value in values)
         {
-            var property = value.Property;
-            var name = property.Name;
-            var propertyType = property.PropertyType;
-            var settingsType = propertyType.GetSettingsTypeName();
+            var name = value.Name;
+            var valueType = value.ValueType;
+            var settingsType = valueType.GetSettingsTypeName();
 
             var typeNode = new JsonObject();
 
             sectionNode.Add(name, typeNode);
 
-            var isRequired = value.IsRequired();
-            var typeArray = isRequired ? new[] { settingsType } : new[] { settingsType, "null" };
+            var isRequired = value.IsRequired;
+            string[] typeArray = isRequired ? [settingsType] : [settingsType, "null"];
             typeNode.Add("type", JsonValue.Create(typeArray));
 
-            if (propertyType.IsEnum)
+            if (valueType.IsEnum)
             {
-                typeNode.Add("enum", JsonValue.Create(Enum.GetNames(propertyType)));
+                typeNode.Add("enum", JsonValue.Create(Enum.GetNames(valueType)));
             }
 
-            var description = property.GetDescription();
+            var description = value.Description;
             if (!string.IsNullOrEmpty(description))
             {
                 typeNode.Add("description", JsonValue.Create(description));
             }
 
-            var defaultValue = value.IsSecret() ? "*****" : value.DefaultValue;
+            var defaultValue = value.IsSecret ? "*****" : value.DefaultValue;
 
             typeNode.Add("default", GetJsonValue(defaultValue));
         }
@@ -315,23 +307,22 @@ public static class SettingsDocumentation
     {
         foreach (var value in values)
         {
-            var property = value.Property;
-            var name = property.Name;
-            var propertyType = property.PropertyType;
-            var settingsType = propertyType.GetSettingsTypeName();
+            var name = value.Name;
+            var valueType = value.ValueType;
+            var settingsType = valueType.GetSettingsTypeName();
 
             text.AppendLine($"### {name}")
                 .AppendLine($"  - type: {settingsType}");
 
-            if (propertyType.IsEnum)
+            if (valueType.IsEnum)
             {
-                text.AppendLine($"  - values: {string.Join(", ", Enum.GetNames(propertyType))}");
+                text.AppendLine($"  - values: {string.Join(", ", Enum.GetNames(valueType))}");
             }
 
-            var defaultValue = value.IsSecret() ? "*****" : value.DefaultValue;
+            var defaultValue = value.IsSecret ? "*****" : value.DefaultValue;
             text.AppendLine($"  - default: {GetStringValue(defaultValue)}");
 
-            var description = property.GetDescription();
+            var description = value.Description;
             if (!string.IsNullOrEmpty(description))
             {
                 text.AppendLine($"  - description: {description}");
@@ -364,24 +355,23 @@ public static class SettingsDocumentation
     {
         foreach (var value in configurationValues)
         {
-            var property = value.Property;
-            var key = property.Name;
-            var propertyType = property.PropertyType;
-            var settingsType = propertyType.GetSettingsTypeName();
+            var key = value.Name;
+            var valueType = value.ValueType;
+            var settingsType = valueType.GetSettingsTypeName();
 
             text.AppendLine($"<h4>{HtmlEncode(key)}</h4>")
                 .AppendLine("<ul>")
                 .AppendLine($"<li>type: {HtmlEncode(settingsType)}</li>");
 
-            if (propertyType.IsEnum)
+            if (valueType.IsEnum)
             {
-                text.AppendLine($"<li>values: {HtmlEncode(string.Join(", ", Enum.GetNames(propertyType)))}</li>");
+                text.AppendLine($"<li>values: {HtmlEncode(string.Join(", ", Enum.GetNames(valueType)))}</li>");
             }
 
-            var defaultValue = value.IsSecret() ? "*****" : value.DefaultValue;
+            var defaultValue = value.IsSecret ? "*****" : value.DefaultValue;
             text.AppendLine($"<li>default: {HtmlEncode(GetStringValue(defaultValue))}</li>");
 
-            var description = property.GetDescription();
+            var description = value.Description;
             if (!string.IsNullOrEmpty(description))
             {
                 text.AppendLine($"<li>description: {HtmlEncode(description)}</li>");
@@ -452,11 +442,6 @@ public static class SettingsDocumentation
         return field?.GetValue(null) as string;
     }
 
-    private static string? GetDescription(this PropertyInfo propertyInfo)
-    {
-        return propertyInfo.GetCustomAttribute<DescriptionAttribute>()?.Description;
-    }
-
     private static string GetSettingsTypeName(this Type propertyType)
     {
         if (NumberTypes.Contains(propertyType))
@@ -472,21 +457,6 @@ public static class SettingsDocumentation
             return "array";
 
         return "string";
-    }
-
-    private static bool IsSecret(this SettingsValue value)
-    {
-        return value.Property.GetCustomAttribute<SettingsSecretAttribute>() != null;
-    }
-
-    private static bool IsIgnored(this SettingsValue value)
-    {
-        return value.Property.GetCustomAttribute<SettingsIgnoreAttribute>() != null;
-    }
-
-    private static bool IsRequired(this SettingsValue value)
-    {
-        return value.Property.GetCustomAttribute<RequiredAttribute>() != null;
     }
 
     private static JsonObject? ReadAppSettings(string path)
