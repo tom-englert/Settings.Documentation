@@ -1,6 +1,8 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.Reflection;
 
+using Microsoft.Extensions.Configuration;
+
 using TomsToolbox.Settings.Documentation.Abstractions;
 
 namespace TomsToolbox.Settings.Documentation.Builder;
@@ -27,7 +29,7 @@ public record SettingsValue(string Section, string Name, string Description, Typ
     /// <returns>A new <see cref="SettingsValue"/> instance with information extracted from the property.</returns>
     public static SettingsValue Create(string section, PropertyInfo propertyInfo, object defaultInstance)
     {
-        var name = propertyInfo.Name;
+        var name = propertyInfo.GetCustomAttribute<ConfigurationKeyNameAttribute>()?.Name ?? propertyInfo.Name;
         var description = propertyInfo.GetCustomAttribute<System.ComponentModel.DescriptionAttribute>()?.Description ?? string.Empty;
         var valueType = propertyInfo.PropertyType;
         var defaultValue = propertyInfo.GetValue(defaultInstance);

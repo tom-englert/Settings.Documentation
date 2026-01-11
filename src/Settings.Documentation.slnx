@@ -11,6 +11,7 @@
   <Project Path="Settings.Documentation.Analyzer/Settings.Documentation.Analyzer.Package/Settings.Documentation.Analyzer.Package.csproj" Id="1d48f041-34b6-4c61-997a-7e86802760b7" />
   <Project Path="Settings.Documentation.Analyzer/Settings.Documentation.Analyzer.Test/Settings.Documentation.Analyzer.Test.csproj" Id="c8b550f7-a720-4f6a-88a9-48577caf4d54" />
   <Project Path="Settings.Documentation.Analyzer/Settings.Documentation.Analyzer/Settings.Documentation.Analyzer.csproj" Id="90327fb9-e65e-49c7-903a-d2e527daf029" />
+  <Project Path="Settings.Documentation.Builder.Test/Settings.Documentation.Builder.Test.csproj" />
   <Project Path="Settings.Documentation.Builder/Settings.Documentation.Builder.csproj" Id="1f6cb428-6803-4812-bb96-f5c80e49c4fa" />
   <Project Path="SampleDocumentationBuilder/SampleDocumentationBuilder.csproj" Id="b3493655-3030-4249-a00d-70a2dc9a6d43" />
   <Project Path="SampleWebApplication/SampleWebApplication.csproj" />
