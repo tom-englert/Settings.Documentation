@@ -285,6 +285,491 @@ public class SettingsDocumentationAnalyzerUnitTest
         await test.RunAsync(TestContext.CancellationToken);
     }
 
+    [TestMethod]
+    public async Task WhenConfigure_AndConfigClassHasAllAttributes_NoDiagnosticIsEmitted()
+    {
+        const string source =
+            """
+            using Microsoft.Extensions.Configuration;
+            using Microsoft.Extensions.DependencyInjection;
+            using TomsToolbox.Settings.Documentation.Abstractions;
+
+            static class Application
+            {
+                static void Program()
+                {
+                    IServiceCollection services = null!;
+                    IConfiguration configuration = null!;
+
+                    services
+                        .AddSomeService()
+                        .Configure<MyOptions>(configuration.GetSection("MyOptions"));
+                }
+
+                static IServiceCollection AddSomeService(this IServiceCollection services)
+                {
+                    return services;
+                }
+            }
+
+            [SettingsSection]
+            public class {|#0:MyOptions|}
+            {
+                [System.ComponentModel.Description("The port used to connect to the host")]
+                public int Port { get; init; } = 99;
+                [System.ComponentModel.Description("The host url running the service")]
+                public string Host { get; init; } = "localhost";
+            }
+            """;
+
+        var test = new Test
+        {
+            TestCode = source
+        };
+
+        await test.RunAsync(TestContext.CancellationToken);
+    }
+
+    [TestMethod]
+    public async Task WhenConfigure_AndConfigClassHasNoSectionAttribute_DiagnosticIsEmitted()
+    {
+        const string source =
+            """
+            using Microsoft.Extensions.Configuration;
+            using Microsoft.Extensions.DependencyInjection;
+
+            static class Application
+            {
+                static void Program()
+                {
+                    IServiceCollection services = null!;
+                    IConfiguration configuration = null!;
+
+                    services
+                        .AddSomeService()
+                        .{|#0:Configure<MyOptions>|}(configuration.GetSection("MyOptions"));
+                }
+
+                static IServiceCollection AddSomeService(this IServiceCollection services)
+                {
+                    return services;
+                }
+            }
+
+            public class MyOptions
+            {
+                [System.ComponentModel.Description("The port used to connect to the host")]
+                public int Port { get; init; } = 99;
+                [System.ComponentModel.Description("The host url running the service")]
+                public string Host { get; init; } = "localhost";
+            }
+            """;
+
+        var test = new Test
+        {
+            TestCode = source,
+            ExpectedDiagnostics = { Diagnostics.MissingSettingsSectionAttribute.AsResult().WithArguments("MyOptions").WithLocation(0) }
+        };
+
+        await test.RunAsync(TestContext.CancellationToken);
+    }
+
+    [TestMethod]
+    public async Task WhenConfigure_AndConfigClassHasNoAttributes_DiagnosticIsEmitted()
+    {
+        const string source =
+            """
+            using Microsoft.Extensions.Configuration;
+            using Microsoft.Extensions.DependencyInjection;
+
+            static class Application
+            {
+                static void Program()
+                {
+                    IServiceCollection services = null!;
+                    IConfiguration configuration = null!;
+
+                    services
+                        .AddSomeService()
+                        .{|#0:Configure<MyOptions>|}(configuration.GetSection("MyOptions"));
+                }
+
+                static IServiceCollection AddSomeService(this IServiceCollection services)
+                {
+                    return services;
+                }
+            }
+
+            public class MyOptions
+            {
+                public int Port { get; init; } = 99;
+                [System.ComponentModel.Description("The host url running the service")]
+                public string Host { get; init; } = "localhost";
+            }
+            """;
+
+        var test = new Test
+        {
+            TestCode = source,
+            ExpectedDiagnostics =
+            {
+                Diagnostics.MissingSettingsSectionAttribute.AsResult().WithArguments("MyOptions").WithLocation(0)
+            }
+        };
+
+        await test.RunAsync(TestContext.CancellationToken);
+    }
+
+    [TestMethod]
+    public async Task WhenConfigure_AndConfigClassHasSettingsSectionButMissingPropertyDescriptions_DiagnosticIsEmitted()
+    {
+        const string source =
+            """
+            using Microsoft.Extensions.Configuration;
+            using Microsoft.Extensions.DependencyInjection;
+            using TomsToolbox.Settings.Documentation.Abstractions;
+
+            static class Application
+            {
+                static void Program()
+                {
+                    IServiceCollection services = null!;
+                    IConfiguration configuration = null!;
+
+                    services
+                        .AddSomeService()
+                        .Configure<MyOptions>(configuration.GetSection("MyOptions"));
+                }
+
+                static IServiceCollection AddSomeService(this IServiceCollection services)
+                {
+                    return services;
+                }
+            }
+
+            [SettingsSection]
+            public class MyOptions
+            {
+                public int {|#0:Port|} { get; init; } = 99;
+                [System.ComponentModel.Description("The host url running the service")]
+                public string Host { get; init; } = "localhost";
+                public string {|#1:ConnectionString|} { get; init; } = "Server=localhost";
+            }
+            """;
+
+        var test = new Test
+        {
+            TestCode = source,
+            ExpectedDiagnostics =
+            {
+                Diagnostics.MissingDescriptionAttribute.AsResult().WithArguments("Port", "MyOptions").WithLocation(0),
+                Diagnostics.MissingDescriptionAttribute.AsResult().WithArguments("ConnectionString", "MyOptions").WithLocation(1)
+            }
+        };
+
+        await test.RunAsync(TestContext.CancellationToken);
+    }
+
+    [TestMethod]
+    public async Task WhenNamedAddOptions_AndConfigClassHasAllAttributes_NoDiagnosticIsEmitted()
+    {
+        const string source =
+            """
+            using Microsoft.Extensions.DependencyInjection;
+            using TomsToolbox.Settings.Documentation.Abstractions;
+
+            static class Application
+            {
+                static void Program()
+                {
+                    IServiceCollection services = null!;
+
+                    services
+                        .AddOptions<MyOptions>("named")
+                        .BindConfiguration("MyOptions");
+                }
+            }
+
+            [SettingsSection]
+            public class {|#0:MyOptions|}
+            {
+                [System.ComponentModel.Description("The port used to connect to the host")]
+                public int Port { get; init; } = 99;
+                [System.ComponentModel.Description("The host url running the service")]
+                public string Host { get; init; } = "localhost";
+            }
+            """;
+
+        var test = new Test
+        {
+            TestCode = source
+        };
+
+        await test.RunAsync(TestContext.CancellationToken);
+    }
+
+    [TestMethod]
+    public async Task WhenNamedAddOptions_AndConfigClassHasNoSectionAttribute_DiagnosticIsEmitted()
+    {
+        const string source =
+            """
+            using Microsoft.Extensions.DependencyInjection;
+
+            static class Application
+            {
+                static void Program()
+                {
+                    IServiceCollection services = null!;
+
+                    services
+                        .{|#0:AddOptions<MyOptions>|}("named")
+                        .BindConfiguration("MyOptions");
+                }
+            }
+
+            public class MyOptions
+            {
+                [System.ComponentModel.Description("The port used to connect to the host")]
+                public int Port { get; init; } = 99;
+                [System.ComponentModel.Description("The host url running the service")]
+                public string Host { get; init; } = "localhost";
+            }
+            """;
+
+        var test = new Test
+        {
+            TestCode = source,
+            ExpectedDiagnostics = { Diagnostics.MissingSettingsSectionAttribute.AsResult().WithArguments("MyOptions").WithLocation(0) }
+        };
+
+        await test.RunAsync(TestContext.CancellationToken);
+    }
+
+    [TestMethod]
+    public async Task WhenNamedConfigure_AndConfigClassHasAllAttributes_NoDiagnosticIsEmitted()
+    {
+        const string source =
+            """
+            using Microsoft.Extensions.Configuration;
+            using Microsoft.Extensions.DependencyInjection;
+            using TomsToolbox.Settings.Documentation.Abstractions;
+
+            static class Application
+            {
+                static void Program()
+                {
+                    IServiceCollection services = null!;
+                    IConfiguration configuration = null!;
+
+                    services.Configure<MyOptions>("named", configuration.GetSection("MyOptions"));
+                }
+            }
+
+            [SettingsSection]
+            public class {|#0:MyOptions|}
+            {
+                [System.ComponentModel.Description("The port used to connect to the host")]
+                public int Port { get; init; } = 99;
+                [System.ComponentModel.Description("The host url running the service")]
+                public string Host { get; init; } = "localhost";
+            }
+            """;
+
+        var test = new Test
+        {
+            TestCode = source
+        };
+
+        await test.RunAsync(TestContext.CancellationToken);
+    }
+
+    [TestMethod]
+    public async Task WhenNamedConfigure_AndConfigClassHasNoSectionAttribute_DiagnosticIsEmitted()
+    {
+        const string source =
+            """
+            using Microsoft.Extensions.Configuration;
+            using Microsoft.Extensions.DependencyInjection;
+
+            static class Application
+            {
+                static void Program()
+                {
+                    IServiceCollection services = null!;
+                    IConfiguration configuration = null!;
+
+                    services.{|#0:Configure<MyOptions>|}("named", configuration.GetSection("MyOptions"));
+                }
+            }
+
+            public class MyOptions
+            {
+                [System.ComponentModel.Description("The port used to connect to the host")]
+                public int Port { get; init; } = 99;
+                [System.ComponentModel.Description("The host url running the service")]
+                public string Host { get; init; } = "localhost";
+            }
+            """;
+
+        var test = new Test
+        {
+            TestCode = source,
+            ExpectedDiagnostics = { Diagnostics.MissingSettingsSectionAttribute.AsResult().WithArguments("MyOptions").WithLocation(0) }
+        };
+
+        await test.RunAsync(TestContext.CancellationToken);
+    }
+
+    [TestMethod]
+    public async Task WhenAddOptionsWithValidateOnStart_AndConfigClassHasAllAttributes_NoDiagnosticIsEmitted()
+    {
+        const string source =
+            """
+            using Microsoft.Extensions.DependencyInjection;
+            using TomsToolbox.Settings.Documentation.Abstractions;
+
+            static class Application
+            {
+                static void Program()
+                {
+                    IServiceCollection services = null!;
+
+                    services
+                        .AddOptionsWithValidateOnStart<MyOptions>()
+                        .BindConfiguration("MyOptions");
+                }
+            }
+
+            [SettingsSection]
+            public class {|#0:MyOptions|}
+            {
+                [System.ComponentModel.Description("The port used to connect to the host")]
+                public int Port { get; init; } = 99;
+                [System.ComponentModel.Description("The host url running the service")]
+                public string Host { get; init; } = "localhost";
+            }
+            """;
+
+        var test = new Test
+        {
+            TestCode = source
+        };
+
+        await test.RunAsync(TestContext.CancellationToken);
+    }
+
+    [TestMethod]
+    public async Task WhenAddOptionsWithValidateOnStart_AndConfigClassHasNoSectionAttribute_DiagnosticIsEmitted()
+    {
+        const string source =
+            """
+            using Microsoft.Extensions.DependencyInjection;
+
+            static class Application
+            {
+                static void Program()
+                {
+                    IServiceCollection services = null!;
+
+                    services
+                        .{|#0:AddOptionsWithValidateOnStart<MyOptions>|}()
+                        .BindConfiguration("MyOptions");
+                }
+            }
+
+            public class MyOptions
+            {
+                [System.ComponentModel.Description("The port used to connect to the host")]
+                public int Port { get; init; } = 99;
+                [System.ComponentModel.Description("The host url running the service")]
+                public string Host { get; init; } = "localhost";
+            }
+            """;
+
+        var test = new Test
+        {
+            TestCode = source,
+            ExpectedDiagnostics = { Diagnostics.MissingSettingsSectionAttribute.AsResult().WithArguments("MyOptions").WithLocation(0) }
+        };
+
+        await test.RunAsync(TestContext.CancellationToken);
+    }
+
+    [TestMethod]
+    public async Task WhenNamedAddOptionsWithValidateOnStart_AndConfigClassHasAllAttributes_NoDiagnosticIsEmitted()
+    {
+        const string source =
+            """
+            using Microsoft.Extensions.DependencyInjection;
+            using TomsToolbox.Settings.Documentation.Abstractions;
+
+            static class Application
+            {
+                static void Program()
+                {
+                    IServiceCollection services = null!;
+
+                    services
+                        .AddOptionsWithValidateOnStart<MyOptions>("named")
+                        .BindConfiguration("MyOptions");
+                }
+            }
+
+            [SettingsSection]
+            public class {|#0:MyOptions|}
+            {
+                [System.ComponentModel.Description("The port used to connect to the host")]
+                public int Port { get; init; } = 99;
+                [System.ComponentModel.Description("The host url running the service")]
+                public string Host { get; init; } = "localhost";
+            }
+            """;
+
+        var test = new Test
+        {
+            TestCode = source
+        };
+
+        await test.RunAsync(TestContext.CancellationToken);
+    }
+
+    [TestMethod]
+    public async Task WhenNamedAddOptionsWithValidateOnStart_AndConfigClassHasNoSectionAttribute_DiagnosticIsEmitted()
+    {
+        const string source =
+            """
+            using Microsoft.Extensions.DependencyInjection;
+
+            static class Application
+            {
+                static void Program()
+                {
+                    IServiceCollection services = null!;
+
+                    services
+                        .{|#0:AddOptionsWithValidateOnStart<MyOptions>|}("named")
+                        .BindConfiguration("MyOptions");
+                }
+            }
+
+            public class MyOptions
+            {
+                [System.ComponentModel.Description("The port used to connect to the host")]
+                public int Port { get; init; } = 99;
+                [System.ComponentModel.Description("The host url running the service")]
+                public string Host { get; init; } = "localhost";
+            }
+            """;
+
+        var test = new Test
+        {
+            TestCode = source,
+            ExpectedDiagnostics = { Diagnostics.MissingSettingsSectionAttribute.AsResult().WithArguments("MyOptions").WithLocation(0) }
+        };
+
+        await test.RunAsync(TestContext.CancellationToken);
+    }
+
     private sealed class Test : CSharpAnalyzerTest<SettingsDocumentationAnalyzer, DefaultVerifier>
     {
         public Test()

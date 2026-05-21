@@ -77,13 +77,33 @@ public class DatabaseSettings
 ```csharp
 var builder = WebApplication.CreateBuilder(args);
 
+// AddOptions<T>() — fluent builder, bind via BindConfiguration or Bind
 builder.Services
     .AddOptions<MyAppSettings>()
     .BindConfiguration(MyAppSettings.ConfigurationSection);
 
+// AddOptions<T>(name) — named options variant
 builder.Services
-    .AddOptions<DatabaseSettings>()
-    .BindConfiguration("ConnectionStrings");
+    .AddOptions<MyAppSettings>("named")
+    .BindConfiguration(MyAppSettings.ConfigurationSection);
+
+// AddOptionsWithValidateOnStart<T>() — same as AddOptions but validates on startup
+builder.Services
+    .AddOptionsWithValidateOnStart<MyAppSettings>()
+    .BindConfiguration(MyAppSettings.ConfigurationSection);
+
+// AddOptionsWithValidateOnStart<T>(name) — named variant
+builder.Services
+    .AddOptionsWithValidateOnStart<MyAppSettings>("named")
+    .BindConfiguration(MyAppSettings.ConfigurationSection);
+
+// Configure<T>() — direct binding, no fluent builder needed
+builder.Services
+    .Configure<DatabaseSettings>(builder.Configuration.GetSection("ConnectionStrings"));
+
+// Configure<T>(name) — named options variant
+builder.Services
+    .Configure<DatabaseSettings>("named", builder.Configuration.GetSection("ConnectionStrings"));
 ```
 
 ### 3. Generate Documentation

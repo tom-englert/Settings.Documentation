@@ -99,14 +99,9 @@ namespace TomsToolbox.Settings.Documentation.Analyzer
             if (symbolInfo.Symbol is not IMethodSymbol methodSymbol)
                 return;
 
-            if (!string.Equals(genericName.Identifier.Text, "AddOptions", StringComparison.Ordinal))
+            if (!IsKnownDirectInvocation(methodSymbol, genericName.Identifier.Text))
             {
                 if (!methodSymbol.GetAttributes().Any(attr => attr.AttributeClass?.Name.StartsWith("SettingsAddOptionsInvocator", StringComparison.Ordinal) == true))
-                    return;
-            }
-            else
-            {
-                if (methodSymbol.ContainingType?.ToDisplayString() != "Microsoft.Extensions.DependencyInjection.OptionsServiceCollectionExtensions")
                     return;
             }
 
@@ -167,6 +162,20 @@ namespace TomsToolbox.Settings.Documentation.Analyzer
 
             // Note: Property diagnostics are handled by AnalyzeNamedTypeWithSettingsSectionAttribute
             // when the type has [SettingsSection] attribute
+        }
+
+        private static readonly (string ContainingType, string[] MethodNames)[] KnownDirectInvocations =
+        [
+            ("Microsoft.Extensions.DependencyInjection.OptionsServiceCollectionExtensions", ["AddOptions", "AddOptionsWithValidateOnStart"]),
+            ("Microsoft.Extensions.DependencyInjection.OptionsConfigurationServiceCollectionExtensions", ["Configure"]),
+        ];
+
+        private static bool IsKnownDirectInvocation(IMethodSymbol methodSymbol, string methodName)
+        {
+            var containingType = methodSymbol.ContainingType?.ToDisplayString();
+
+            return KnownDirectInvocations.Any(entry => string.Equals(entry.ContainingType, containingType, StringComparison.Ordinal)
+                                                       && entry.MethodNames.Contains(methodName, StringComparer.Ordinal));
         }
     }
 }
